@@ -1,0 +1,167 @@
+\setstretch{1.6}
+\sectiontitle{6}{2D Path following}
+\lhead{2D Path following} % section header
+
+\subsection{Background}
+Path following is a  motion control scenario where a “vessel” has to follow a predefined path without any time constraints \cite{caharija_integral_2016}. It thereby differs to trajectory tracking since the path is not parameterized by time, but rather by another useful parameter \cite{hung_review_2023}, such as path length. 
+Other than the obvious benefits of using path following for the application of brain surgery instead of trajectory tracking \todo{examples of these obvious benefits} . There are several benefits of path following over trajectory tracking, first of all there is more flexibility in making the “vehicle” first converge to the path smoothly,  
+There is also a benefit from a technical standpoint since path following has the potential to exhibit smoother convergence properties and reduce actuator activity (Aguiar and Hespanha 2007). 
+
+\subsubsection{Guidance systems}
+Path following can be divided into two parts: the guidance system and the control system \cite{qi_curve_2022}. Where the guidance system is responsible for determining the desired target which the control system can then use in order to steer such that the "vehicle" stays on the path, or is lead toward the path if the cross -track error (that is th the shortest distance to the path) is nonzero. \todo{add a sentence on why the marine community path following is relevant here}. Some of the most popular methods adopted by the marine community are line-of-sight(LOS) guidance, pure pursuit guidance, vector field guidance and constant bearing guidance \cite{qi_curve_2022}, \cite{lekkas_integral_2014}. 
+
+\paragraph*{Pure pursuit}
+\todo{write about pure pursuit}
+
+\paragraph*{Line of Sight}
+The LOS guidance method is now widely used due to its small computational cost, easy implementation and intuitiveness \cite{qi_curve_2022} \cite{caharija_integral_2016}. In effect it imitates a helmsman steering the vessel toward a point lying at a constant distance ahead of the ship along the desired path \cite{caharija_integral_2016}. In the case of no enivronmental disturbances, simple LOS has nice path convergence properties \cite{borhaug_integral_2008}. However, path following control approaches based on traditional LOS guidance are susceptible to environmental disturbances \cite{borhaug_integral_2008} or more generally all errors that case the actual navigation direction to differ from the guidance direction. In particular this will lead to path deviation and converegence problems \cite{borhaug_integral_2008}. Moreover, this drawback cannot be fixed by simply adding integral action to the heading controller, the problem originates from the heading reference generator, that is, the LOS guidance law itself \cite{borhaug_integral_2008}, Therefore Børghaug et al. \cite{borhaug_integral_2008} proposed a guidance law based on the LOS guidance principle but that includes integral action to overcome these drawbacks while preserving the intuition and the simplicity of traditional LOS guidance.
+
+\paragraph*{adaptive methods}
+
+\subsubsection{Kinematic modeling}
+
+
+
+\subsection{Methods}
+
+\subsubsection{Kinematic modeling}
+
+\subsubsection{Navigation}
+
+\subsubsection{Pitch autopilot}
+In orer for the ribbon to follow the path, the tip must continuously align wiht the desired pith angle \(\theta_{ref}\) computed by the lOS algorithm. However,the physical system is controlled through tendon tensions which induce bending at the distal tip. Therefore, an intermedediate control layer, a pitch autopilot, must be implemented to convert heading references into actuator-level commands.
+\newline \newline
+It was decided
+
+\subsubsection{Tuning}
+the Ziegler-Nichols relay method assumes that:
+
+The system has an oscillatory behavior when switching between min and max control effort.
+
+The output returns toward the setpoint (or crosses it) once actuation is disabled, creating that nice sine-like signal from which to estimate the ultimate gain and period.
+
+But in your case — tendon-actuated heading control — that doesn’t apply:
+
+Once you've pulled the tendons to deform the tip and achieve a certain heading, the heading stays there unless you actively pull the other way.
+
+There’s no natural restoring force — no spring-back, no drift back — so the "relay" logic of toggling output and watching the system cross the setpoint repeatedly breaks down.
+
+This is more like trying to autotune a position-controlled robot arm joint where gravity and friction dominate and the joint stays where it's told.
+
+\subsubsection{Validation of Path Following}
+
+
+\subsection{Implementation}
+
+\subsubsection{Ribbon kinematic notation and definitions}
+As mentioned in the hardware section the ribbon device is moved up and down i.e. in the z-plane via control of the linear stage which is attatched at the proximal tip of the device. However movement in the x and y plane is controlled via controlling the tensions at the tendons which are attached to motors at the top and the tip of the ribbon at the bottom. When the ribbon is inserted in a brain phantom via the movement of the linear stage the direction it will move in will depend on the deflection of the tip. Which is in turn dependent on the tendon activation pattern which results in the beingind or twisting of the tip. Since the device is constrained by the brain phantom a change in tendon tensions will not result in large deflections in the entire shape such as in a traditional tendon driven continuum robot, rather only the tip will deflect, leaving us with a very different kinematics. This makes the kinematics more similar to steerable needles rather than continuum robots, and since a 3D kinematic model of a steerable needle can be assumed to be similar to that of an underactued underwater vehicle \cite{secoli_closed-loop_2013}, we can assume the same here.  \todo{explain somewhere what steerable needles are}
+
+
+The kinematic modeling starts with the Euler angle representation, which describes the orientation between the global frane and the local body coordinate frame as three rotations: roll \(\\phi\), pitch \(\theta\) and yaw \(\psi\) which represent rotations about the local body cartesian axes \(x\), \(y\) and \(z\) respectively.
+
+\todo{Figure: showing local body frame z, x, y and the three angles on the ribbon}
+
+\subsubsection{Kinematic model}
+In the 2D kinematic model we assume the global y-position to be constant and thus using no velocity in the y-position and the rotation revolves around the local y-axis. The rotational matrix thereby becomes
+\begin{equation}
+    \textbf{R} = \textbf{R}(\theta) = \begin{bmatrix}
+        cos \theta   &   0   &   -sin \theta \\
+        0            &   1   &   0\\
+        sin \theta   &   0   &   cos \theta
+    \end{bmatrix}
+\end{equation}
+
+Thereby the kinematic model becomes
+\todo{decide if it should be called global or inertial frame, what is the difference?}
+\todo{decide on v notation}
+\begin{equation}
+    \vec{v_g} = \textbf{R}(\theta) \vec{v_b}
+\end{equation}
+\begin{equation}
+    \begin{bmatrix}
+        \dot{x}(t)\\ \dot{y}(t)\\ \dot{z}(t)
+    \end{bmatrix} = 
+    \begin{bmatrix}
+        cos \theta   &   0   &   -sin \theta \\
+        0            &   1   &   0\\
+        sin \theta   &   0   &   cos \theta
+    \end{bmatrix}
+    \begin{bmatrix}
+        v_x^b \\ v_y^b \\ v_z^b
+    \end{bmatrix}
+\end{equation}
+\begin{equation}
+    \begin{bmatrix}
+        \dot{x}(t)\\ \dot{y}(t)\\ \dot{z}(t)
+    \end{bmatrix} = \begin{bmatrix}
+        v_x^bcos \theta - v_y^b sin \theta\\
+        v_y^b\\
+        v_x^b sing \theta + v_z^b cos \theta
+    \end{bmatrix}
+\end{equation}
+Where \(\vec{v_b}\) is the velocity of the tip of the ribbon given in the body frame. However since we are in the 2D case where \(v_y^b = 0\) we can simplify this to:
+\begin{equation}
+        \begin{bmatrix}
+        \dot{x}(t)\\ \dot{z}(t)
+    \end{bmatrix} = \begin{bmatrix}
+        v_x^bcos \theta - v_y^b sin \theta\\
+        v_x^b sing \theta + v_z^b cos \theta
+    \end{bmatrix}
+\end{equation}
+We can further simplify this by assuming that 
+
+
+\todo{Figure: same figure as in ribbon kinematic model page calle ribbon system 2D, theta}
+
+In order to simplify the control problem of the tendon driven ribbon we look at what is possible to control. 
+
+
+
+\todo{see steerable needles, see if they have better explanations}.
+
+\subsubsection{Navigation}
+In order to make the ribbon follow a path the tendon tensions must be continually adjusted in such a way that it results in 
+
+In the most simple LOS implementation for the 2D ribbon path following 
+
+Therea re two major stage of navigation: insertion of the device into the phantom and advancement inside the gel \cite{noseda_flat_2024}. 
+
+\subsubsection{Pitch autopilot}
+The pitch autopilot is a closed-loop control system that continuously regulates the pitch of the tip. The autopilot layer consists of three primary components: a pitch angle converter, a feedback controller, and a tension converter. Together, these components transformt eh LOS geading reference into actuator-level tendon tension setpoints.
+
+\paragraph*{Pitch converter}
+The first step in the autopilot loos is estimating the measured pitch angle, \(\theta_{meas}\), from vision data. This is simply done by computing the angle between the z-axis and the 3D direction vector defined by the detected tip and pre-tip positions. 
+\begin{equation}
+    \theta_{meas} = atan2(\vec{d}_x,\vec{d}_z)
+\end{equation}
+where \(\vec{d}_x\) and \(\vec{d}_z\) are the \(x\)- and \(z\)- components of the direction vector. This computation is implemented in the \texttt{PitchConverter} class,  which can be later changed with more sophisticated conversion strategies later on.
+
+\paragraph*{Feedback controller}
+The main component of the autopilot is the PI controller implemented in the \texttt{FeedbackController} class. The controller receives the pitch error, defined as 
+\begin{equation}
+    \theta_e = \theta_{ref} - \theta_{meas}
+\end{equation}
+and calculates control output \(u\) intended to minimize the error. Since the ribbon system is highly damped, derivative control is unnecessary and therefore a PI controller was implemented with anti-windup for the integral term.
+\begin{equation}
+    u(t) = K_p \theta_e(t) + K_i \int \theta_e(t)
+\end{equation}
+Since the pitch control looped is triggered asynchronously by new vision data and the arrival time fo these updates may vary the effective sampling time \(\Deltat\) is computed each time using system timestamps. This ensures the validityof the integral terms.
+\newline \newline
+The output of the controller is a scalar actuation variable that represents the differential tension required between the left and right tendon groups. This value is later converted into explicit tendon tension setpoints in the next stage of the autopilot
+
+
+\paragraph*{Tension converter}
+The final step in the control loop is converting the 
+
+\paragraph*{F}
+
+\subsection{Results}
+
+
+\subsection{Discussion}
+
+\subsubsection{Pitch conversion improvements}
+
+
+
+

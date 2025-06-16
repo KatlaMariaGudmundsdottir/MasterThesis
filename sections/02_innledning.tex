@@ -1,0 +1,54 @@
+
+%=================================================================
+%                           Start Document
+%=================================================================
+\sectiontitle{2}{Introduction}
+\lhead{Introduction} % section header
+
+\setstretch{1.6}
+
+
+\subsection{Motivation}
+\lhead{Introduction - Motivation}
+
+Navigating biomedical instruments inside the brain remains challenging and high-risk. \todo{sentence on what kind of conditions might require it and some numbers maybe}. Robotic-assisted surgery ahs transformed many fields, but its application in neurosurgery remains limited by current technology \cite{doulgeris_robotics_2015}.The traditional rigid instruments are restricted in their ability to navigate delicate and structurally complex soft tissues such as the brain \cite{noseda_flat_2024}. Steerable, flexible devices offer a potential solution, improving access and safety while enabling new procedures \cite{da_veiga_challenges_2020}. Additionally, advancements in microfabrication have enabled the production of microscopic probes capable of monitoring biological activity and delivering stimulation or therapy \cite{chen_neural_2017} \cite{frank_next-generation_2019}. Yet, no steerable device has been developed that can both navigate brain tissue and utilize this technology for real-time sensin and targeted therapy. 
+\newline \newline
+To address this unmet need the MICROBS lab has developed a novel ribbon-shaped, tendon-driven continuum microrobot for minimally invasive neurosurgical interventions. This design allows for agile 3D navigation by achieving configuration unattainable by traditional rod-like instruments \cite{noseda_flat_2024}. Enabling precise navigation through soft tissue, capable of safely avoiding critical structures and reaching multiple target in a single insertion. However, this unique geometry introduces new challenges in modeling and control, requiring specialized solutions. Recognizing this need, the aim of this thesis is to develop closed-loop navigation for this novel robotic device enabling future effective use of this technology for brain surgery. 
+
+
+%%\subsection{Background}
+%%\lhead{Introduction - Background}
+
+
+
+\lhead{Introduction - Project Interpretation}
+\subsection{Project Interpretation}
+
+This project aims to develop a closed-loop navigational system for a ribbon-shaped robotic device in brain tissue. To that end several steps outlined as steps 1-4 in the project description needed to be completed before moving on to the closed loop design. The primary
+goal, despite the project’s broad scope, was to create reliable and well-documented work grounded in established theory and literature. This approach ensures that the project can serve as a foundation for further development and a robust proof of concept that can be used for demonstrations for clinicians as well as engineers.
+
+Since this is as far as the writer know, the first system of this kind and it poses significant control complexities it is expected that significant time must be invested in developing the mathematics of the system. Given the timeframe of the project and the number of tasks that must be completed before one can move on to the actual navigational challenges, the focus is to implement a robust 2D control strategy instead of attempting to rush the tasks in order to impement a full 3D. The priority is therefore to perform the prerequisite tasks for the 2D  navigation in a thorough and scientifically robust manner. For the 2D pathfollowing there is also a strong focus on robust implementation that is as well implemented in a highly modular way such that if parts of the system were to be further developed it would be easy. The ultimate goal was to deliver a reusable and scalable system, rather than risking the need for extensive later revisions by attempting to implement a more complex solution within the limited timeframe.
+
+Although the focus is on robust implementation, I also aim to explore how theoretically the system may be further developed and scaled in order to achieve optimal performance. Therefore this thesis also details the ways in which the modules may be expanded upon in further revisions and the mathematical concepts that may be employed later on. It also includes the last point in the project description which is extension of the 2D control framework into 3D.
+
+
+
+\subsection{Project Context}
+\lhead{Introduction - Project Context}
+
+This thesis builds upon an ongoing project at the MICROBS lab at EPFL towards developing a novel ribbon-shaped, tendon-driven continuum microrobot for minimally invasive neurosurgical interventions. The request for a closed loop control mechanism for the device came from Lorenzo Noseda who is doing his PhD in the device itself. 
+
+
+
+
+\subsection{Contributions}
+\lhead{Introduction - Contributions}
+
+
+\subsection{Outline}
+\lhead{Introduction - Outline}
+
+
+%==============================================================
+%                           End Document
+%==============================================================

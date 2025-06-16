@@ -1,0 +1,25 @@
+\setstretch{1.6}
+\sectiontitle{4}{Hardware}
+\lhead{Hardware} % section header
+The robot itself consists of a ribbon-shaped (i.e. rectangular cross-section) tendon-actuated decive controlled from the proximal end by a robotic manipulation system. Depending on the tendon tension patterns, the flexible structure will bend or twist at the distal end, allowing for navigational control. \cite{noseda_flat_2024}
+
+
+\subsection{Device}
+The base material polyimide *PI(, has been extensively used for the microfabrication of flexible sensors \cite{noseda_flat_2024}.
+
+The device has two main parts: the backbone and the tendons. The device has four tendons, two attatched at each side of the backbone at its tip. This configuration allows steering in 2D by having differing tendon tensions on the two sides of the ribbon. It can additionally be used to steer in 3D by also exploiting the twisting manouvering that occurs if tendons placed diagonally are pulled.
+\todo{figure of tendon placements}
+
+
+\subsection{Robotic manipulation system}
+The main function of the robotic manipulation system is to actuate the tensons while pushing the body forward so that the ribbon device can move along the desired trajectory with the desired kinematics \cite{noseda_flat_2024}. 
+
+The system provides three controlled axes, two for the tendons and one for the feeder. The system consists of four brushless servomotors equiped with absolute encoders (Faulhaber 1028M006B) with speed controllers (Series SC 2904 S). Which each are attatched to the proximal end of the tendons allowing for the reeling in or releasing of the tendons resulting thus enabling tension control of the tendons. The tendons are routed around pulleys which are each connected to their own force sensor \todo{insert type and precision} that continuously measures the tension force on the tendons. This allows for feedback and thus closed loop control of the tension on each tendon \todo{motivate why we are doing tension control}. 
+
+The feeder which moves the entire device up and down consists of a linear stage \todo{insert type and precision} onto which the "flaps" at the proximal end of the backbone are attatched. This linear stage allows for the setting of speed, acceleration and has "move to position" functionality which are all used in order to achieve the desired kinematics of the system.
+
+
+\subsection{Vision}
+The system is equipped with imaging in order to provide visual feedback for the closed-loop implementation. Here the vision is implemented using bright-field images acquired by a \todo{finish}
+
+\subsection{Brain phantom}
