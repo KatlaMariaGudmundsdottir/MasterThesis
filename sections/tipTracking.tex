@@ -6,6 +6,14 @@
 
 
 \subsection{Methods}
+
+\subsubsection{Refactoring of Vision Code}
+As mentioned in the project context there was an existing 3D tip tracking algorithm that was developed in python specifically for this project. However it had not been tested for real-time scenarios, and since the code used YOLO (\todo{explanation of yolo})for object detection it was necessary to not only restructure the code for real-time use, but also to thread it to minimize latencies that would otherwise have rendered the code unusable for real-time feedback, communication between this python code and the controlsystem in Qt also had to be implemented, therefore it was decided that a full restructuring of the code was necessary
+\todo{insert figure of old vision structure}. The code was refactored using the some code quality criteria as discussed in the theory section on refactoring. 
+\newline \newline
+As the project progressed it became clear that the 3D vision system using 
+
+\subsubsection{Choosing a Communication Protocol}
 In order to establish a robust connection between the already existing Python-based tip tracking system and the C++/Qt-based control system several ways of establishing an interface were evaluated. In order to choose the most suited communication method a set of evaluation criteria based on their suitability for real-time dat streaming \textit{Designing Data Intensive Applications} \cite{kleppmann_designing_2017} were used.
 
 \begin{enumerate}
@@ -46,6 +54,8 @@ Networking-based communication, using either raw sockets or messaging libraries 
 ZeroMQ provides a higher-level abstraction for message-based communication and offers built-in support for various messaging patterns, including pusblish/subscrive (pub/sub), request/reply and push/pull \todo{source}. The pub/sub model is especially advantageous system since it enables efficient real-te streaming of the vision data to multiple subscribers with minimal overhead. So that future scaling including a real-time path planning algorithm can simply subscribe to the vision data. By using ZeroMQ over UDP the system will have fast, scalable and maintainable communication. Based on this evaluation ZeroMQ over UDP was selected as the communication method for real-time data transfer between the vision and control systems
 
 \subsection{Implementation}
+
+\subsection{Final Refactored Vision System}
 \todo{talk about modularization of the vision code?}
 
 The vision system that was implemented by a previous student \todo{attatch documentation for the syste?} captures video from two synchronized cameras, detecting the position of the tip and a point just above \todo{put in exact distance}  the tip by using a YOLO onject detection model. The three-dimensional coordinates of these points are then computed using triangulation. A normalized direction vector is then computed based on these points. The coordinates, along with a normalized vector are formatted into a structure message which is then processed and sent by the communication class. 

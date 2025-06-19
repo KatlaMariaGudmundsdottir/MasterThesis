@@ -22,8 +22,13 @@ However, introducing concurrency also introduces complexity. Issues such as race
 A common and reliable pattern for concurrent real-time systems is event-driven communication between threads. In this model, components communicate through asynchronous messages rather than direct calls or shared varieables. In Qt this is implemented via the signal-slot mechanism. Signals are emitted when events occur, and slots (connected handler functions) respond to those events. Qt ensures that the communication is thread safe by searializing signal delivery using the vent loop of the receiving thread, meaning that it will execute in the context of the receiving threads event loop. 
 
 \subsection{Methods}
-The refactoring process began with a thorough analysis fo teh existing codebase. Throughtout this process the existing methods and classes were documented using a style compatible with doxygen. This step provided an overview of the software architecture and highlighted areas where the structure violated modular design principles, such as excessive coupling and low cohesion.
+The refactoring process began with a thorough analysis of the existing codebase. Throughtout this process the existing methods and classes were documented using a style compatible with doxygen. This step provided an overview of the software architecture and highlighted areas where the structure violated modular design principles, such as excessive coupling and low cohesion.
 \newline \newline
+An analysis of the original codebase showed that there were several issues especially low cohesion and a large range of responsibilities in the mainwindow class, leading to low readability as is exemplified in figure ...
+\TODO{figure of old mainwindow!}
+\newline \newline 
+The original architecture senn in \TODO{insert reference to old architecture} made sense for the application with classes for the motors, the tendon pids etc, but since some responsibilites that should have belonged to those classes remained in the mainwindow the architecture wasn't very useful and the code had high interdependence and very little abstraction.
+\TODO{figure of old architecture!}
 Based on the architectural guidelines described in the theory section, a revised design was developed. The design emphasizes smaller highly cohesive classes and separation of concerns by defining minimal, well-documented interfaces between modules and isolating hardware-dependent functionality, for different types of application level logic. The existing code was refactored to fit into this structure and unnecessary functionality was removed. Existing errors in the code were also remedied. Thereafter new code was written into the the modules in order to expand the functinality of the system.
 
 \subsection{Implementation}
@@ -47,8 +52,11 @@ To support real-time perfomance and responsiveness, multithreading was introduce
 
 
 \subsection{Results}
-\todo{figure of old structure}
-\todo{figure of structure}
+
+\todo{figure of new architecture!}
+\todo{figure of threads!}
+
+
 
 \subsubsection{Sensor}
 The \texttt{sensor} class was restructured to encapsulate all low-level configuration and data handling required for each individual sensor. Upon initialization, it configures the ADC to sample at the correct timeslot, sets the analog input gain, and synchronizes data acquisition with a dedicated counter using external trigger modes. This ensures that each sensor samples consistently and at the intended \SI{1}{\kilo\hertz} rate. The class also handles voltage-to-force conversion using sensor-specific calibration constants, allowing for flexible reuse across different sensors with varying sensitivities. The readout function returns both the converted voltage and the corresponding timestamp, ensuring the measurements are correctly time-aligned with the control loop. By modularizing the sensor interface in this way, the implementation became more maintainable, reusable, and easier to debug during both development and calibration.
