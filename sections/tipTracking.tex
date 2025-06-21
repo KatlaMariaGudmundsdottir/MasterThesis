@@ -8,7 +8,7 @@
 \subsection{Methods}
 
 \subsubsection{Refactoring of Vision Code}
-As mentioned in the project context there was an existing 3D tip tracking algorithm that was developed in python specifically for this project. However it had not been tested for real-time scenarios, and since the code used YOLO (\todo{explanation of yolo})for object detection it was necessary to not only restructure the code for real-time use, but also to thread it to minimize latencies that would otherwise have rendered the code unusable for real-time feedback, communication between this python code and the controlsystem in Qt also had to be implemented, therefore it was decided that a full restructuring of the code was necessary
+As mentioned in the project context there was an existing 3D tip tracking algorithm that was developed in python specifically for this project. However it was all implemented in a single file and had not been tested for real-time scenarios, and since the code used YOLO (\todo{explanation of yolo})for object detection it was necessary to not only restructure the code for real-time use, but also to thread it to minimize latencies that would otherwise have rendered the code unusable for real-time feedback, communication between this python code and the controlsystem in Qt also had to be implemented, therefore it was decided that a full restructuring of the code was necessary
 \todo{insert figure of old vision structure}. The code was refactored using the some code quality criteria as discussed in the theory section on refactoring. 
 \newline \newline
 As the project progressed it became clear that the 3D vision system using 
@@ -56,17 +56,35 @@ ZeroMQ provides a higher-level abstraction for message-based communication and o
 \subsection{Implementation}
 
 \subsection{Final Refactored Vision System}
+
 \todo{talk about modularization of the vision code?}
 
-The vision system that was implemented by a previous student \todo{attatch documentation for the syste?} captures video from two synchronized cameras, detecting the position of the tip and a point just above \todo{put in exact distance}  the tip by using a YOLO onject detection model. The three-dimensional coordinates of these points are then computed using triangulation. A normalized direction vector is then computed based on these points. The coordinates, along with a normalized vector are formatted into a structure message which is then processed and sent by the communication class. 
+The vision system that was implemented by a previous student \todo{attatch documentation for the syste?} captures video from two synchronized cameras, detecting the position of the tip and a point just above \todo{put in exact distance}  the tip by using a YOLO onject detection model. The three-dimensional coordinates of these points are then computed using triangulation. A normalized direction vector is then computed based on these points. The coordinates, along with a normalized vector are formatted into a structure message which is then processed and sent by the communication class. A sequence digram of how the refactored code does this can be seen in figure
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.1\linewidth]{images/vision/pythonSequencediag.png}
+    \caption{Sequence diagram of Python Tip detection code}
+    \label{fig:seqpython}
+\end{figure}
 
 \todo{figure of vision system detections}
+
+\subsection{Communication Implementation between Python and Qt}
+
 
 ZeroMQ supports multiple serialization formats, and JSON was chosen for its simplicity and ease of debugging. Each transmitted message consists of a timestamp, the 3D coordinates of the detected tip and pre-tip, and the direction vector. Before transmission, the coordinates undergo a transformation from the coordinate frame utilized in the vision system to the control system's coordinate system. 
 
 The communication system between the vision system (the python tip tracking algorithm) and the controller follows a publisher-subscriber (pub/sub) model. The vision system, acting as the publisher, continuously streams the tip, pre-tip positions and the directional vector data to the ZeroMQ socket bound to the address specified in the \texttt{config} file. There any subscriber on the network can receive updates. 
 
 In the C++/Qt control system a dedicated thread is implemented as a zeroMQ subsciber and listens for vision dta updates. This prevents blocking the main control loop. Once a new message is received the extrancted tip and pre-tip coordinates and direction vector are used as feedback in the control system. This architecture ensures that the control system is always working with the most recent available data while minimizing delays.
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=1.1\linewidth]{images/Software documentation/visionSequencediag.png}
+    \caption{Sequence diagram of the communication between python vision system and Qt control system}
+    \label{fig:seqComm}
+\end{figure}
 
 \subsection{Results}
 \todo{speed quantification?}

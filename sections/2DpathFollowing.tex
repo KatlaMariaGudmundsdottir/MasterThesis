@@ -3,18 +3,32 @@
 \lhead{2D Path following} % section header
 
 \subsection{Background}
+\subsubsection{Path Following Definition}
 Path following is a  motion control scenario where a “vessel” has to follow a predefined path without any time constraints \cite{caharija_integral_2016}. It thereby differs to trajectory tracking since the path is not parameterized by time, but rather by another useful parameter \cite{hung_review_2023}, such as path length. 
-Other than the obvious benefits of using path following for the application of brain surgery instead of trajectory tracking \todo{examples of these obvious benefits} . There are several benefits of path following over trajectory tracking, first of all there is more flexibility in making the “vehicle” first converge to the path smoothly,  
-There is also a benefit from a technical standpoint since path following has the potential to exhibit smoother convergence properties and reduce actuator activity (Aguiar and Hespanha 2007). 
+
+This distinction is important since in the application to brain surgery spatial control is a lot more critical than timing. Also since the system can make smoother corrections and prioritize accuracy over speed when there are no strict time requirements. Path following also allows smoother convergence to the path and can reduce actuator actuator activity, since it avoids the constant adjustments required by time-based tracking (Aguiar and Hespanha 2007).
+
+\subsubsection{Application of marine path-following to ribbon navigation in brain tissue}
+The steering of the tendon-driven ribbon in brain tissue can be modelled to e kinematacally analogous to that of a boat or UAV. In a marine vessel vessel, turning the helm deflects the rudder, inducin a curvature that realigns the hull with the desired path. In the surgical device, pulling on the tendons causes the flexible tip of the probe to bend in a specific direction. This bending changes the direction of the devices motion, in much the same way that a rudder steers a boat. 
+\newline \newline 
+Because the bending of the tip of the device directly controls the direction of motion and the relationship between curvature and lateral deviation is governed by the same kinematic principles as in boat steering, the curvature or heading angle computed by marine guiddance laws are directly applicable by converting the heading angle to target bending angle for the device. This target bending angle can then be used to compute the corresponding tendon tensions required to steer the probe along the desired path.
+\newline \newline 
+Therefore, guidance methods established in marine robotics are well-suited as a foundation for developing the path-following strategy in this application. The following sections therefore provide an overview of the guidance systems popularly employed and developed for marine navigation.
 
 \subsubsection{Guidance systems}
-Path following can be divided into two parts: the guidance system and the control system \cite{qi_curve_2022}. Where the guidance system is responsible for determining the desired target which the control system can then use in order to steer such that the "vehicle" stays on the path, or is lead toward the path if the cross -track error (that is th the shortest distance to the path) is nonzero. \todo{add a sentence on why the marine community path following is relevant here}. Some of the most popular methods adopted by the marine community are line-of-sight(LOS) guidance, pure pursuit guidance, vector field guidance and constant bearing guidance \cite{qi_curve_2022}, \cite{lekkas_integral_2014}. 
+Path following can further be divided into two parts: the guidance system and the control system \cite{qi_curve_2022}. Where the guidance system is responsible for determining the desired target which the control system can then uses in order to steer such that the "vessel" stays on the path, or is lead toward the path if the cross -track error (that is the the shortest distance to the path) is nonzero. Some of the most popular methods adopted by the marine community are line-of-sight(LOS) guidance, pure pursuit guidance, vector field guidance and constant bearing guidance \cite{qi_curve_2022}, \cite{lekkas_integral_2014}. 
 
-\paragraph*{Pure pursuit}
-\todo{write about pure pursuit}
+\paragraph*{Pure pursuit (Orthogonal Projection)}
+In the orthogonal projection/Pure pursuit method the point on path that is closest to the vehicle is used as the "reference point" and then steering towards the point. This leads the along-track error to always be zero and only the corss-track error need to be controlled. The method then computes the desired yaw rate in the case of boaths (i.e. how fast the vehicle should turn) to drive the cross-track error to zero. 
+\newline \newline
+This approach is simple and intuitive. However, the convergence behavior may be problematic in practic. Since the controller always aims for the nearest point on the path it continues to generate turning commands even when the vehicle is nearly aligned. This causes overshooting and unnecessary steering corrections. Further, this method can encounter issues in certain geometric scenarios. Particularly on circular paths when the vehicle crosses the centerpoint of the curvature. In this case the projection onto the path is no longer well-defined and the method can break down.
+
+\
 
 \paragraph*{Line of Sight}
-The LOS guidance method is now widely used due to its small computational cost, easy implementation and intuitiveness \cite{qi_curve_2022} \cite{caharija_integral_2016}. In effect it imitates a helmsman steering the vessel toward a point lying at a constant distance ahead of the ship along the desired path \cite{caharija_integral_2016}. In the case of no enivronmental disturbances, simple LOS has nice path convergence properties \cite{borhaug_integral_2008}. However, path following control approaches based on traditional LOS guidance are susceptible to environmental disturbances \cite{borhaug_integral_2008} or more generally all errors that case the actual navigation direction to differ from the guidance direction. In particular this will lead to path deviation and converegence problems \cite{borhaug_integral_2008}. Moreover, this drawback cannot be fixed by simply adding integral action to the heading controller, the problem originates from the heading reference generator, that is, the LOS guidance law itself \cite{borhaug_integral_2008}, Therefore Børghaug et al. \cite{borhaug_integral_2008} proposed a guidance law based on the LOS guidance principle but that includes integral action to overcome these drawbacks while preserving the intuition and the simplicity of traditional LOS guidance.
+The LOS guidance method is now widely used due to its small computational cost, easy implementation and intuitiveness \cite{qi_curve_2022} \cite{caharija_integral_2016}. Instead of using the closest point on the path, LOS guidance steers the vehicle toward a point located a fixed distance ahead on the path (known as the lookahead distance). In effect it imitates a helmsman steering the vessel toward a point lying at a constant distance ahead of the ship along the desired path \cite{caharija_integral_2016}. In the case of no enivronmental disturbances, simple LOS has good path convergence properties \cite{borhaug_integral_2008}. 
+\newline \newline
+However, path following control approaches based on traditional LOS guidance are susceptible to environmental disturbances \cite{borhaug_integral_2008} or more generally all errors that case the actual navigation direction to differ from the guidance direction. In particular this will lead to path deviation and converegence problems \cite{borhaug_integral_2008}. Moreover, this drawback cannot be fixed by simply adding integral action to the heading controller, the problem originates from the heading reference generator, that is, the LOS guidance law itself \cite{borhaug_integral_2008}, Therefore Børghaug et al. \cite{borhaug_integral_2008} proposed a guidance law based on the LOS guidance principle but that includes integral action to overcome these drawbacks while preserving the intuition and the simplicity of traditional LOS guidance.
 
 \paragraph*{adaptive methods}
 
@@ -161,6 +175,8 @@ The final step in the control loop is converting the
 \subsection{Discussion}
 
 \subsubsection{Pitch conversion improvements}
+
+\subsub
 
 
 
