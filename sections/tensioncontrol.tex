@@ -56,16 +56,34 @@ Since the backbone of the ribbon is moved up and down by the linear stage and th
 
 \paragraph*{Implementing a new linear stage}
 Before moving on to implementing the feedforward element that depends on the speed of the linear stage, the new linear stage had to be implemented. In a previous iteration of the system, the one that was implemented when this thesis was started the setup utilized a servomotor along with with a "feeder" that consisted of two counterrotating barrels, essentially serving as a conveyor belt. However there were significant issues with this mostly due to slipping, something that was exacerbated when the system was miniaturized. It was therefore replaced by a linear stage that is directly attached to the top of the ribbon, removing the slipping issue of the conveyor belt solution.
-\newline \newline 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/linearstage/architecture.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
 Two new classes were written to integrate this linear stage into the system software: \texttt{LinearStageController} and \texttt{StageMotionEstimator}. The \texttt{LinearStageController} is responsible for low-level communication with the linear stage hardware using the Physik Instrumente (PI) GCS2 API. It handles connection management, servo enable/disable commands, movement to absolute or relative positions, referencing, and safety checks for position limits and servo state. Timers are used to periodically check whether movement or referencing operations are complete, allowing the controller to emit signals when movement finishes or when feedback estimation should start or stop.
 \newline \newline
 Methods were also written for querying the current state of the system, such as position, speed, and servo status, and the class integrates with Qt’s signal-slot mechanism to communicate with other parts of the application. All interaction with the hardware is guarded by connection and safety checks to prevent invalid operations, and the use of QTimers ensures that blocking calls are avoided, keeping the GUI responsive. This modular and robust design makes the class easy and safe to  reuse and extend in future control experiments involving the linear stage.
+
+
 \todo{figures of the new linearstage code}
 \todo{picture of the linearstage}
 
+
+
 \paragraph*{Implementing a motion estimator for the linear stage}
 Although the GCS2 API for the linear stage offers some data transmission functionality, it lack the capability to continuously and reliably transmit real-time speed data at the necessary rate for feedforward control. Several lengthy and throrough attempts were made at using the PI data recorder system to fetch position readings (speed readings are not available through the recorder system). However it proved to have extremely limited buffer size leading it to either be too slow or limited in throughput for real-time control. Timer triggered querying was also attempted but since the API requires acknowledgements and the querying is slow this also was not a feasible solution.
-\newline \newline 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{images/linearstage/movetopos_sequencediag.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
 The \texttt{StageMotionEstimator} class was therefore written to estimate the stage's speed and position. When a movement command is issued, this class is initialized with the start and target positions, as well as the target speed, acceleration and deceleration parameters. All parameters that are known and chosen by the user. It then calculates whether the motion will follow a trtapezoidal or triangular speed profile and starts a \texttt{QTimer} to periodically compute the current estimated speed and position. This allows for the access of real-time speed estimates for the feedforward, even though the stage hardware itself is incapable of supplying this information.
 \todo{sequnce diagram for motion estimator}
 
@@ -105,5 +123,26 @@ Since the mechanical dynamics of the system are dependent on whether you are inc
 To prevent instability in the outer tension control loop, the tension setpoints for the feedback were ramped gradually avoiding abrupt changes that the inner speed loop could not handle in time, which would otherwise cause overshoot, oscillations and instability.
 
 \subsection{Results}
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/PID performance/PIDErrorDistByTendon.png}
+    \caption{Tension Control PID setpoint tracking error distribution by tendon during insertion with a steady setpoint above 100mN}
+    \label{fig:PIDErrorDistByTendon}
+\end{figure}
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/PID performance/Figure_1.png}
+    \caption{Mean Tension Control PID steady state error during insertion with steady setpoints above 100mN}
+    \label{fig:steadtyStatePIDError}
+\end{figure}
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=\linewidth]{images/PID performance/rampExamples.png}
+    \caption{Examples of measured tension during a ramping of setpoint while inserting the tendon}
+    \label{fig:rampresponse}
+\end{figure}
 
 \subsection{Discussion}
