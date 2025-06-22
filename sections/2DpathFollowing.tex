@@ -23,14 +23,27 @@ In the orthogonal projection/Pure pursuit method the point on path that is close
 \newline \newline
 This approach is simple and intuitive. However, the convergence behavior may be problematic in practic. Since the controller always aims for the nearest point on the path it continues to generate turning commands even when the vehicle is nearly aligned. This causes overshooting and unnecessary steering corrections. Further, this method can encounter issues in certain geometric scenarios. Particularly on circular paths when the vehicle crosses the centerpoint of the curvature. In this case the projection onto the path is no longer well-defined and the method can break down.
 
-\
+\todo{python figure of pure pursuit!}
 
 \paragraph*{Line of Sight}
 The LOS guidance method is now widely used due to its small computational cost, easy implementation and intuitiveness \cite{qi_curve_2022} \cite{caharija_integral_2016}. Instead of using the closest point on the path, LOS guidance steers the vehicle toward a point located a fixed distance ahead on the path (known as the lookahead distance). In effect it imitates a helmsman steering the vessel toward a point lying at a constant distance ahead of the ship along the desired path \cite{caharija_integral_2016}. In the case of no enivronmental disturbances, simple LOS has good path convergence properties \cite{borhaug_integral_2008}. 
 \newline \newline
-However, path following control approaches based on traditional LOS guidance are susceptible to environmental disturbances \cite{borhaug_integral_2008} or more generally all errors that case the actual navigation direction to differ from the guidance direction. In particular this will lead to path deviation and converegence problems \cite{borhaug_integral_2008}. Moreover, this drawback cannot be fixed by simply adding integral action to the heading controller, the problem originates from the heading reference generator, that is, the LOS guidance law itself \cite{borhaug_integral_2008}, Therefore Børghaug et al. \cite{borhaug_integral_2008} proposed a guidance law based on the LOS guidance principle but that includes integral action to overcome these drawbacks while preserving the intuition and the simplicity of traditional LOS guidance.
+However, path following control approaches based on traditional LOS guidance are susceptible to environmental disturbances \cite{borhaug_integral_2008} or more generally all errors that case the actual navigation direction to differ from the guidance direction. In particular this will lead to path deviation and converegence problems \cite{borhaug_integral_2008}. Moreover, this drawback cannot be fixed by simply adding integral action to the heading controller, the problem originates from the heading reference generator, that is, the LOS guidance law itself \cite{borhaug_integral_2008}.
 
-\paragraph*{adaptive methods}
+\paragraph*{Integral Line of Sight (ILOS)}
+To adress the limitation of traditional LOS, Børghaug et al. \cite{borhaug_integral_2008} proposed a guidance law based on the LOS guidance principle but that includes integral action to overcome the drawbacks of environmental disturbance while preserving the intuition and the simplicity of traditional LOS guidance.
+\newline \newline 
+By integrating the cross-track error over time, ILOS effectively reduces steady-state error and restores path convergence even when the vessels actual movement direction deviates from its commanded heading.
+
+\paragraph*{Adaptive Methods}
+Adaptive guidance methods can improve path-following in uncertain or dynamic environments by adjusting parameters in real time. Several adaptive approaches have been adopted for path-following including adaptive LOS, where the lookahead distance is baried based on cross.track oerror or path curvature \cite{hung_review_2023}. This allows the system to steer more smoothly when far from the path and more precisely when close, reducing overshooting and unnecessary correction.
+\newline \newline 
+Other methods include adaptive vector field guidance which modifies the synthetic vector field used to steer the vehicle toward the path. By adjusting the shape or strength of the filed based on real-time errors or estimated disturbances \cite{soetanto_adaptive_2003}. Or other techniques including sliding mode control \cite{soetanto_adaptive_2003}, Learning-based MPC and reingorcement learning based control \cite{hung_review_2023}.
+
+\paragraph*{Model Predicitve Control (MPC)}
+Model Predictive Control (MPC) is an optimization-based approach that computes control actuation by predicting future system behavior over a finite time horizon. At each time step, it solves and optimal control problem that minimizes path-following error while satisfying system constraints such a speed, turnign limits, and actuator bounds \cite{hung_review_2023}. 
+\newline \newline
+Unlike geometric methods like LOS or pure pursuit, MPC can explicitly handle physical constraints and nonlinear dynamics. 
 
 \subsubsection{Kinematic modeling}
 
@@ -40,12 +53,21 @@ However, path following control approaches based on traditional LOS guidance are
 
 \subsubsection{Kinematic modeling}
 
-\subsubsection{Navigation}
+\subsubsection{Choice of Path-Following Method}
+Since the main focus is to establish a simple and effective path following system the choice of path following strategy must be reliable, scalable and computationally simple solution. The initial navigation method is based on a simple LOS guidance law. LOS offers good convergence properties with minimal computational overhead, making it a good practical starting point.
+\newline \newline 
+While standard LOS doe snot handle disturbances the design is modular and can easily be extended to integral LOS (
+ILOS) by adding an integral term to the heading reference. This will allow for compensation of path steady state errors and ensure quicker convergence.
+\newline \newline
+During the implementation of this path-following strategy it is crucial to ensure that it is implemented in a modular way such that it may be switched out by more complex methods as discussed in the background such as adaptive or MPC based methods if further robustness or error handling is necessary.
+
+\subsubsection{Path-Following Implementation Methodology}
+The path-following system is implemented using a modular architecture that separates the navigation guidance, pitch control
 
 \subsubsection{Pitch autopilot}
-In orer for the ribbon to follow the path, the tip must continuously align wiht the desired pith angle \(\theta_{ref}\) computed by the lOS algorithm. However,the physical system is controlled through tendon tensions which induce bending at the distal tip. Therefore, an intermedediate control layer, a pitch autopilot, must be implemented to convert heading references into actuator-level commands.
+In order for the ribbon to follow the path, the tip must continuously align wiht the desired pitch angle \(\theta_{ref}\) computed by the lOS algorithm. However,the physical system is controlled through tendon tensions which induce bending at the distal tip. Therefore, an intermedediate control layer, a pitch autopilot, must be implemented to convert heading references into actuator-level commands.
 \newline \newline
-It was decided
+It was decided 
 
 \subsubsection{Tuning}
 the Ziegler-Nichols relay method assumes that:
@@ -141,10 +163,11 @@ In the most simple LOS implementation for the 2D ribbon path following
 Therea re two major stage of navigation: insertion of the device into the phantom and advancement inside the gel \cite{noseda_flat_2024}. 
 
 \subsubsection{Pitch autopilot}
-The pitch autopilot is a closed-loop control system that continuously regulates the pitch of the tip. The autopilot layer consists of three primary components: a pitch angle converter, a feedback controller, and a tension converter. Together, these components transformt eh LOS geading reference into actuator-level tendon tension setpoints.
+The pitch autopilot is a closed-loop control system that continuously regulates the pitch of the tip. The autopilot layer consists of three primary components: a pitch angle converter, a feedback controller, and a tension converter. Together, these components transform the LOS heading reference into actuator-level tendon tension setpoints.
+
 
 \paragraph*{Pitch converter}
-The first step in the autopilot loos is estimating the measured pitch angle, \(\theta_{meas}\), from vision data. This is simply done by computing the angle between the z-axis and the 3D direction vector defined by the detected tip and pre-tip positions. 
+The first step in the autopilot is estimating the measured pitch angle, \(\theta_{meas}\), from vision data. This is simply done by computing the angle between the z-axis and the 3D direction vector defined by the detected tip and pre-tip positions. 
 \begin{equation}
     \theta_{meas} = atan2(\vec{d}_x,\vec{d}_z)
 \end{equation}
@@ -165,7 +188,22 @@ The output of the controller is a scalar actuation variable that represents the 
 
 
 \paragraph*{Tension converter}
-The final step in the control loop is converting the 
+The final step in the control loop is converting the actuation variable that is defined as 
+\begin{equation}
+    u(t) = T_{3, 4} - T_{2,1}
+\end{equation}
+Where \(T_{3, 4}\) and \(T_{1, 2}\) signify the tension on tendons 3 and 4 on the right and 1 and 2 on the left respectively.
+
+The conversion stage maps the scalar actuation variable to individual tendon tensions, while maintaining a baseline tension of 100mN on all tendons to prevent slack. The conversion logic is:
+\begin{equation}
+\begin{cases}
+T_1 = T_2 = 100 \text{ mN}, \quad T_3 = T_4 = 100 + u & \text{if } u > 0 \
+T_1 = T_2 = 100 + |u|, \quad T_3 = T_4 = 100 \text{ mN} & \text{if } u < 0 \
+T_1 = T_2 = T_3 = T_4 = 100 \text{ mN} & \text{if } u = 0
+\end{cases}
+\end{equation}
+
+
 
 \paragraph*{F}
 

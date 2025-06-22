@@ -42,7 +42,7 @@ The original architecture senn in \ref{fig:oldarchitecture} made sense for the a
 Based on the architectural guidelines described in the theory section, a revised design was developed. The design emphasizes smaller highly cohesive classes and separation of concerns by defining minimal, well-documented interfaces between modules and isolating hardware-dependent functionality, for different types of application level logic. The existing code was refactored to fit into this structure and unnecessary functionality was removed. Existing errors in the code were also remedied. Thereafter new code was written into the the modules in order to expand the functinality of the system.
 
 \subsection{Implementation}
-Before the refactoring rpocess, much of the application logic was concentrated in \texttt{mainwindow.cpp}. It was restructured into well defined modules, each responsible for a specific task. The updated project structure includes:
+Before the refactoring process, much of the application logic was concentrated in \texttt{mainwindow.cpp}. It was restructured into well defined modules, each responsible for a specific task. The updated project structure includes:
 \begin{itemize}
     \item \textbf{motorcontrol/}: Manages low-level motor and linear stage control.
     \item \textbf{pathfollowing/}: Handles trajectory processing, feedforward calculations, and path interpolation.
