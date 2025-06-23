@@ -61,10 +61,30 @@ Unlike geometric methods like LOS or pure pursuit, MPC can explicitly handle phy
 \subsubsection{Kinematic modeling}
 
 \subsection{Design}
-\subsubsection{Final 2D Navigation Design}
+\subsubsection{Final 2D Control System Design}
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=\linewidth]{images/RibbotControl_V2.png}
+    \caption{Full control system diagram for 2D path following}
+    \label{fig:2Dcontrol}
+\end{figure}
+A visualization of the full control system architecture for 2D path following is shown in figure \ref{fig:2Dcontrol}. The system uses a predefined spatial path as reference (see Path Planning Integration chapter) and continuously adjusts the tendon tensions to steer the ribbon tip along this path. The current position \((x_t, z_t)\) is extracted from vision data (see Tip Tracking Integration chapter) and passed to the \texttt{GuidanceSystem}, which computes the desired pitch angle \(\theta_d\). The orientation of the tip \(\vec{d}\) is also extracted from the vision data and passed to the \texttt{PitchConverter} which calculates the measure pitch angle \(\theta_m\). The desired pitch angle \(\theta_d\) is then compared to the measured pitch angle \(\theta_m\), and the resulting error \(\theta_e\) is used by the feedback controller, here a PI controller to compute a corrective curvature command \(\kappa_{d,fb}\) which in this system corresponds to how fast the pitch changes as the ribbon advances in space since 
+\begin{equation}
+    \kappa = \frac{d\theta}{ds}
+\end{equation}
+Before any path following is done the ribbon is run through a calibration protocol where its bending dynamics based on tendon tension are mapped, after this has been mapped the user inputs this into the gui and the \texttt{RibbonAdapter} module that receives the desired corrective \(\kappa_{d, fb}\) uses this in order to calculate the appropriate actuation value \(u_{d, fb}\) in order to achieve the desired curvature for this particular ribbon. The actuation value \(u\) is defined as 
+\begin{equation}
+    u = T_{3,4} - T_ {1,2}
+\end{equation}
+Where \(T_{3,4}\) corresponds to the tension on tendon 3 and 4 which are placed on the right side, and \(T_{1,2}\) corresponds to the tension on tendon 1 and 2 which are on the left side. 
+\newline \newline
+To assist the controller and improve responsiveness, a feedforward signal based on the local path curvature at the closest point is calculated by the \texttt{FeedbackCalculator} modulate. This feedbackterm \(u_{d, ff}\) is then combined with the feedback term and sent to the \texttt{TensionConverter} module. This module converts that actuation value into individual tendon tension targets \(\textbf{T}_d\) based on a set of rules which ensure a baseline tension is maintained and tension limits aren't exceeded. These targets are then sent to the low-level tension controllers (see closed-loop tension control chapter) which ensure that the tendons track their tension targets using feedback from force sensors.
+\newline \newline
+This modular and layered control structure supports accurate and smooth path following, while being modular and scalable. 
 
 
-\subsection{Choice of Path-Following Method}
+\subsubsection{Choice of Guidance system}
 The chosen path-following strategy must above all be reliable, modular and suit the constraints of the ribbon-based system. Among the available options, pure pursuit, LOS, ILOS, adaptive and MPC, the initial chosen strategy is LOS guidance is it is a simple yet very effective solution to path following.
 \newline \newline 
 Although more advanced techniques such as MPC or more advanced form of adaptive control could provide better performance in theory, they are currently impractical for this system. In particular, implementing MPC poses siggnificant challenges because of teh highly nonlinear and complex dynamics of the ribbon. The tendon actuation results in strong coupling between degrees of freedom and the deformation fo the ribbon is influenced by wear, material hysteresis, bucklin and loading history. The future surgical environment adds another layer of complexity through contact forces with tissue that are difficult to predict and incorporate into the optimization framework. All of which make it extremely difficult to develop an accurate predictive model required for MPC.
@@ -79,7 +99,16 @@ For these reasons, LOS offers a better, more practical solution. LOS is relative
 
 
 \subsubsection{Path-Following Implementation Methodology}
-The path-following system is implemented using a modular architecture that separates the navigation guidance, pitch control, feedforward and tendon tension concerns. The overall system architecture consists of five primary modules that work together to achieve path following 
+In order to ensure that later expansions or improvements to the 2D path-following would be easy to implement and the system be highly readable the  system is implemented using a modular architecture that consists of a \texttt{GuidanceSystem}, \texttt{PitchConverter}, \texttt{FeedbackController}, \texttt{FeedforwardCalculator}, \texttt{RibbonAdapter} and \texttt{TensionConverter}. These modules correspond to classes in the code base inside the pathfollowing folder and correspond directly to the modules in the control system diagram as can be seen in figure \ref{fig:2DpathfollowingSystemControlDiag}. 
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=\linewidth]{images/RibbotControl_2Dpathfollowing400p.png}
+    \caption{Visualization of the 2D path following system section of the full control system}
+    \label{fig:2DpathfollowingSystemControlDiag}
+\end{figure}
+
+In order to orchestrate the cooperation between these classes and their dataflow the \texttt{PathFollower} class also exists and instantiates most of the modules inside the 2D path following system. In the later chapter on implementation each of the modules are expanded upon and explained.
 
 \paragraph*{Guidance}
 The \texttt{Guidance} class implements the core navigation algorithm that generates heading references based on the current tip position and the desired path.
