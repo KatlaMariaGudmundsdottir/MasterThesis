@@ -62,7 +62,12 @@ ILOS) by adding an integral term to the heading reference. This will allow for c
 During the implementation of this path-following strategy it is crucial to ensure that it is implemented in a modular way such that it may be switched out by more complex methods as discussed in the background such as adaptive or MPC based methods if further robustness or error handling is necessary.
 
 \subsubsection{Path-Following Implementation Methodology}
-The path-following system is implemented using a modular architecture that separates the navigation guidance, pitch control
+The path-following system is implemented using a modular architecture that separates the navigation guidance, pitch control and tendon tension concerns. The overall system architecture consists of five primary modules that work together to achieve path following 
+
+\paragraph*{Guidance}
+The \texttt{Guidance} class implements the core navigation algorithm that generates heading references based on the current tip position and the desired path.
+
+\paragraph*{title}
 
 \subsubsection{Pitch autopilot}
 In order for the ribbon to follow the path, the tip must continuously align wiht the desired pitch angle \(\theta_{ref}\) computed by the lOS algorithm. However,the physical system is controlled through tendon tensions which induce bending at the distal tip. Therefore, an intermedediate control layer, a pitch autopilot, must be implemented to convert heading references into actuator-level commands.
