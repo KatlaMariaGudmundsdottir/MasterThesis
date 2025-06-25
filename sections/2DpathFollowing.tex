@@ -56,92 +56,16 @@ Other methods include adaptive vector field guidance which modifies the syntheti
 \paragraph*{Model Predicitve Control (MPC)}
 Model Predictive Control (MPC) is an optimization-based approach that computes control actuation by predicting future system behavior over a finite time horizon. At each time step, it solves and optimal control problem that minimizes path-following error while satisfying system constraints such a speed, turnign limits, and actuator bounds \cite{hung_review_2023}. 
 \newline \newline
-Unlike geometric methods like LOS or pure pursuit, MPC can explicitly handle physical constraints and nonlinear dynamics. Linear model predictive control, nonlinear MPC and learning-based MPC have all been used in path following research \cite{hung_review_2023}. However they are complicated in terms of design and implementation since they involce solving an optimization problem online. Yet since they deal with the vehicle's input constraints i.e. velocity and angular rate explicitly they are  expected to outperform other path following strategies in cases that require teh vehicle to maneuver more agressively. Another advantage is that they can incoroprate more easily other tasks such as obstacle avoidance in the path following problem. Although using these methods is particularly challenging in environments and with devices that are not easily modeled.
+Unlike geometric methods like LOS or pure pursuit, MPC can explicitly handle physical constraints and nonlinear dynamics. Linear model predictive control, nonlinear MPC and learning-based MPC have all been used in path following research \cite{hung_review_2023}. However they are complicated in terms of design and implementation since they involve solving an optimization problem online. Yet since they deal with the vehicle's input constraints i.e. velocity and angular rate explicitly they are  expected to outperform other path following strategies in cases that require teh vehicle to maneuver more agressively. Another advantage is that they can incoroprate more easily other tasks such as obstacle avoidance in the path following problem. Although using these methods is particularly challenging in environments and with devices that are not easily modeled.
 
-\subsubsection{Kinematic modeling}
+\subsubsection{Kinematic Modeling of Similar Devices}
+
+
 
 \subsection{Design}
-\subsubsection{Final 2D Control System Design}
-
-\begin{figure} [H]
-    \centering
-    \includegraphics[width=\linewidth]{images/RibbotControl_V2.png}
-    \caption{Full control system diagram for 2D path following}
-    \label{fig:2Dcontrol}
-\end{figure}
-A visualization of the full control system architecture for 2D path following is shown in figure \ref{fig:2Dcontrol}. The system uses a predefined spatial path as reference (see Path Planning Integration chapter) and continuously adjusts the tendon tensions to steer the ribbon tip along this path. The current position \((x_t, z_t)\) is extracted from vision data (see Tip Tracking Integration chapter) and passed to the \texttt{GuidanceSystem}, which computes the desired pitch angle \(\theta_d\). The orientation of the tip \(\vec{d}\) is also extracted from the vision data and passed to the \texttt{PitchConverter} which calculates the measure pitch angle \(\theta_m\). The desired pitch angle \(\theta_d\) is then compared to the measured pitch angle \(\theta_m\), and the resulting error \(\theta_e\) is used by the feedback controller, here a PI controller to compute a corrective curvature command \(\kappa_{d,fb}\) which in this system corresponds to how fast the pitch changes as the ribbon advances in space since 
-\begin{equation}
-    \kappa = \frac{d\theta}{ds}
-\end{equation}
-Before any path following is done the ribbon is run through a calibration protocol where its bending dynamics based on tendon tension are mapped, after this has been mapped the user inputs this into the gui and the \texttt{RibbonAdapter} module that receives the desired corrective \(\kappa_{d, fb}\) uses this in order to calculate the appropriate actuation value \(u_{d, fb}\) in order to achieve the desired curvature for this particular ribbon. The actuation value \(u\) is defined as 
-\begin{equation}
-    u = T_{3,4} - T_ {1,2}
-\end{equation}
-Where \(T_{3,4}\) corresponds to the tension on tendon 3 and 4 which are placed on the right side, and \(T_{1,2}\) corresponds to the tension on tendon 1 and 2 which are on the left side. 
-\newline \newline
-To assist the controller and improve responsiveness, a feedforward signal based on the local path curvature at the closest point is calculated by the \texttt{FeedbackCalculator} modulate. This feedbackterm \(u_{d, ff}\) is then combined with the feedback term and sent to the \texttt{TensionConverter} module. This module converts that actuation value into individual tendon tension targets \(\textbf{T}_d\) based on a set of rules which ensure a baseline tension is maintained and tension limits aren't exceeded. These targets are then sent to the low-level tension controllers (see closed-loop tension control chapter) which ensure that the tendons track their tension targets using feedback from force sensors.
-\newline \newline
-This modular and layered control structure supports accurate and smooth path following, while being modular and scalable. 
-
-
-\subsubsection{Choice of Guidance system}
-The chosen path-following strategy must above all be reliable, modular and suit the constraints of the ribbon-based system. Among the available options, pure pursuit, LOS, ILOS, adaptive and MPC, the initial chosen strategy is LOS guidance is it is a simple yet very effective solution to path following.
-\newline \newline 
-Although more advanced techniques such as MPC or more advanced form of adaptive control could provide better performance in theory, they are currently impractical for this system. In particular, implementing MPC poses siggnificant challenges because of teh highly nonlinear and complex dynamics of the ribbon. The tendon actuation results in strong coupling between degrees of freedom and the deformation fo the ribbon is influenced by wear, material hysteresis, bucklin and loading history. The future surgical environment adds another layer of complexity through contact forces with tissue that are difficult to predict and incorporate into the optimization framework. All of which make it extremely difficult to develop an accurate predictive model required for MPC.
-\newline \newline
-For these reasons, LOS offers a better, more practical solution. LOS is relatively straightforward to implement and has good convergence properties in undisturbed environments. It is also very easy to expand upon by adding a integral term, creating a ILOS guidance system that would better handle disturbances. It can even be made adaptive by making the look-ahead distance change based on chosen factors. It is therefore a good starting off point for the system.
-
-
-\subsection{Methods}
-
-\subsubsection{Kinematic modeling}
-
-
-
-\subsubsection{Path-Following Implementation Methodology}
-In order to ensure that later expansions or improvements to the 2D path-following would be easy to implement and the system be highly readable the  system is implemented using a modular architecture that consists of a \texttt{GuidanceSystem}, \texttt{PitchConverter}, \texttt{FeedbackController}, \texttt{FeedforwardCalculator}, \texttt{RibbonAdapter} and \texttt{TensionConverter}. These modules correspond to classes in the code base inside the pathfollowing folder and correspond directly to the modules in the control system diagram as can be seen in figure \ref{fig:2DpathfollowingSystemControlDiag}. 
-
-\begin{figure} [H]
-    \centering
-    \includegraphics[width=\linewidth]{images/RibbotControl_2Dpathfollowing400p.png}
-    \caption{Visualization of the 2D path following system section of the full control system}
-    \label{fig:2DpathfollowingSystemControlDiag}
-\end{figure}
-
-In order to orchestrate the cooperation between these classes and their dataflow the \texttt{PathFollower} class also exists and instantiates most of the modules inside the 2D path following system. In the later chapter on implementation each of the modules are expanded upon and explained.
-
-\paragraph*{Guidance}
-The \texttt{Guidance} class implements the core navigation algorithm that generates heading references based on the current tip position and the desired path.
-
-\paragraph*{title}
-
-\subsubsection{Pitch autopilot}
-In order for the ribbon to follow the path, the tip must continuously align wiht the desired pitch angle \(\theta_{ref}\) computed by the lOS algorithm. However,the physical system is controlled through tendon tensions which induce bending at the distal tip. Therefore, an intermedediate control layer, a pitch autopilot, must be implemented to convert heading references into actuator-level commands.
-\newline \newline
-It was decided 
-
-\subsubsection{Tuning}
-the Ziegler-Nichols relay method assumes that:
-
-The system has an oscillatory behavior when switching between min and max control effort.
-
-The output returns toward the setpoint (or crosses it) once actuation is disabled, creating that nice sine-like signal from which to estimate the ultimate gain and period.
-
-But in your case — tendon-actuated heading control — that doesn’t apply:
-
-Once you've pulled the tendons to deform the tip and achieve a certain heading, the heading stays there unless you actively pull the other way.
-
-There’s no natural restoring force — no spring-back, no drift back — so the "relay" logic of toggling output and watching the system cross the setpoint repeatedly breaks down.
-
-This is more like trying to autotune a position-controlled robot arm joint where gravity and friction dominate and the joint stays where it's told.
-
-\subsubsection{Validation of Path Following}
-
-
-\subsection{Implementation}
 
 \subsubsection{Ribbon kinematic notation and definitions}
-As mentioned in the hardware section the ribbon device is moved up and down i.e. in the z-plane via control of the linear stage which is attatched at the proximal tip of the device. However movement in the x and y plane is controlled via controlling the tensions at the tendons which are attached to motors at the top and the tip of the ribbon at the bottom. When the ribbon is inserted in a brain phantom via the movement of the linear stage the direction it will move in will depend on the deflection of the tip. Which is in turn dependent on the tendon activation pattern which results in the beingind or twisting of the tip. Since the device is constrained by the brain phantom a change in tendon tensions will not result in large deflections in the entire shape such as in a traditional tendon driven continuum robot, rather only the tip will deflect, leaving us with a very different kinematics. This makes the kinematics more similar to steerable needles rather than continuum robots, and since a 3D kinematic model of a steerable needle can be assumed to be similar to that of an underactued underwater vehicle \cite{secoli_closed-loop_2013}, we can assume the same here.  \todo{explain somewhere what steerable needles are}
+As mentioned in the hardware section the ribbon device is moved up and down i.e. in the z-plane via control of the linear stage which is attatched at the proximal tip of the device. However movement in the x and y plane is controlled via controlling the tensions at the tendons which are attached to motors at the top and the tip of the ribbon at the bottom. When the ribbon is inserted in a brain phantom via the movement of the linear stage the direction it will move in will depend on the deflection of the tip. Which is in turn dependent on the tendon activation pattern which results in the bending or twisting of the tip. Since the device is constrained by the brain phantom a change in tendon tensions will not result in large deflections in the entire shape such as in a traditional tendon driven continuum robot, rather only the tip will deflect, leaving us with a very different kinematics. This makes the kinematics more similar to steerable needles rather than continuum robots, and since a 3D kinematic model of a steerable needle can be assumed to be similar to that of an underactued underwater vehicle \cite{secoli_closed-loop_2013}, we can assume the same here.  \todo{explain somewhere what steerable needles are}
 
 
 The kinematic modeling starts with the Euler angle representation, which describes the orientation between the global frane and the local body coordinate frame as three rotations: roll \(\\phi\), pitch \(\theta\) and yaw \(\psi\) which represent rotations about the local body cartesian axes \(x\), \(y\) and \(z\) respectively.
@@ -206,39 +130,143 @@ In order to simplify the control problem of the tendon driven ribbon we look at 
 
 \todo{see steerable needles, see if they have better explanations}.
 
-\subsubsection{Navigation}
-In order to make the ribbon follow a path the tendon tensions must be continually adjusted in such a way that it results in 
+\subsubsection{Final 2D Control System Design}
 
-In the most simple LOS implementation for the 2D ribbon path following 
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=\linewidth]{images/RibbotControl_V2.png}
+    \caption{Full control system diagram for 2D path following}
+    \label{fig:2Dcontrol}
+\end{figure}
+A visualization of the full control system architecture for 2D path following is shown in figure \ref{fig:2Dcontrol}. The system uses a predefined spatial path as reference (see Path Planning Integration chapter) and continuously adjusts the tendon tensions to steer the ribbon tip along this path. The current position \((x_t, z_t)\) is extracted from vision data (see Tip Tracking Integration chapter) and passed to the \texttt{GuidanceSystem}, which computes the desired pitch angle \(\theta_d\). The orientation of the tip \(\vec{d}\) is also extracted from the vision data and passed to the \texttt{PitchConverter} which calculates the measure pitch angle \(\theta_m\). The desired pitch angle \(\theta_d\) is then compared to the measured pitch angle \(\theta_m\), and the resulting error \(\theta_e\) is used by the feedback controller, here a PI controller to compute a corrective curvature command \(\kappa_{d,fb}\) which in this system corresponds to how fast the pitch changes as the ribbon advances in space since 
+\begin{equation}
+    \kappa = \frac{d\theta}{ds}
+\end{equation}
+Before any path following is done the ribbon is run through a calibration protocol where its bending dynamics based on tendon tension are mapped, after this has been mapped the user inputs this into the gui and the \texttt{RibbonAdapter} module that receives the desired corrective \(\kappa_{d, fb}\) uses this in order to calculate the appropriate actuation value \(u_{d, fb}\) in order to achieve the desired curvature for this particular ribbon. The actuation value \(u\) is defined as 
+\begin{equation}
+    u = T_{3,4} - T_ {1,2}
+\end{equation}
+Where \(T_{3,4}\) corresponds to the tension on tendon 3 and 4 which are placed on the right side, and \(T_{1,2}\) corresponds to the tension on tendon 1 and 2 which are on the left side. 
+\newline \newline
+To assist the controller and improve responsiveness, a feedforward signal based on the local path curvature at the closest point is calculated by the \texttt{FeedbackCalculator} modulate. This feedbackterm \(u_{d, ff}\) is then combined with the feedback term and sent to the \texttt{TensionConverter} module. This module converts that actuation value into individual tendon tension targets \(\textbf{T}_d\) based on a set of rules which ensure a baseline tension is maintained and tension limits aren't exceeded. These targets are then sent to the low-level tension controllers (see closed-loop tension control chapter) which ensure that the tendons track their tension targets using feedback from force sensors.
+\newline \newline
+This modular and layered control structure supports accurate and smooth path following, while being modular and scalable. 
 
-Therea re two major stage of navigation: insertion of the device into the phantom and advancement inside the gel \cite{noseda_flat_2024}. 
+
+\subsubsection{Choice of Guidance system}
+The chosen path-following strategy must above all be reliable, modular and suit the constraints of the ribbon-based system. Among the available options, pure pursuit, LOS, ILOS, adaptive and MPC, the initial chosen strategy is LOS guidance is it is a simple yet very effective solution to path following.
+\newline \newline 
+Although more advanced techniques such as MPC or more advanced form of adaptive control could provide better performance in theory, they are currently impractical for this system. In particular, implementing MPC poses siggnificant challenges because of teh highly nonlinear and complex dynamics of the ribbon. The tendon actuation results in strong coupling between degrees of freedom and the deformation fo the ribbon is influenced by wear, material hysteresis, bucklin and loading history. The future surgical environment adds another layer of complexity through contact forces with tissue that are difficult to predict and incorporate into the optimization framework. All of which make it extremely difficult to develop an accurate predictive model required for MPC.
+\newline \newline
+For these reasons, LOS offers a better, more practical solution. LOS is relatively straightforward to implement and has good convergence properties in undisturbed environments. It is also very easy to expand upon by adding a integral term, creating a ILOS guidance system that would better handle disturbances. It can even be made adaptive by making the look-ahead distance change based on chosen factors. It is therefore a good starting off point for the system.
+
+
+\subsection{Methods}
+
+\subsubsection{Path-Following Implementation Methodology}
+In order to ensure that later expansions or improvements to the 2D path-following would be easy to implement and the system be highly readable the  system is implemented using a modular architecture that consists of a \texttt{GuidanceSystem}, \texttt{PitchConverter}, \texttt{FeedbackController}, \texttt{FeedforwardCalculator}, \texttt{RibbonAdapter} and \texttt{TensionConverter}. These modules correspond to classes in the code base inside the pathfollowing folder and correspond directly to the modules in the control system diagram as can be seen in figure \ref{fig:2DpathfollowingSystemControlDiag}. 
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=\linewidth]{images/RibbotControl_2Dpathfollowing400p.png}
+    \caption{Visualization of the 2D path following system section of the full control system}
+    \label{fig:2DpathfollowingSystemControlDiag}
+\end{figure}
+
+In order to orchestrate the cooperation between these classes and their dataflow the \texttt{PathFollower} class was created. This class is also responsible for communicating with the rest of the code base. Its connection to the other classes can be seen in figure \ref{fig:pathfolloingmodules}.   In the later chapter on implementation each of the modules are expanded upon and explained.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/Software documentation/pathfollowingmodules.png}
+    \caption{Path following system architecture}
+    \label{fig:pathfolloingmodules}
+\end{figure}
+
+
+
+\paragraph*{Guidance}
+The \texttt{Guidance} class implements the core navigation algorithm that generates heading references based on the current tip position and the desired path.
+
+\paragraph*{title}
+
+\subsubsection{Pitch autopilot}
+In order for the ribbon to follow the path, the tip must continuously align wiht the desired pitch angle \(\theta_{ref}\) computed by the lOS algorithm. However,the physical system is controlled through tendon tensions which induce bending at the distal tip. Therefore, an intermedediate control layer, a pitch autopilot, must be implemented to convert heading references into actuator-level commands.
+\newline \newline
+It was decided 
+
+\subsubsection{Tuning}
+the Ziegler-Nichols relay method assumes that:
+
+The system has an oscillatory behavior when switching between min and max control effort.
+
+The output returns toward the setpoint (or crosses it) once actuation is disabled, creating that nice sine-like signal from which to estimate the ultimate gain and period.
+
+But in your case — tendon-actuated heading control — that doesn’t apply:
+
+Once you've pulled the tendons to deform the tip and achieve a certain heading, the heading stays there unless you actively pull the other way.
+
+There’s no natural restoring force — no spring-back, no drift back — so the "relay" logic of toggling output and watching the system cross the setpoint repeatedly breaks down.
+
+This is more like trying to autotune a position-controlled robot arm joint where gravity and friction dominate and the joint stays where it's told.
+
+\subsubsection{Validation of Path Following}
+
+
+\subsection{Implementation}
+
+\subsubsection{Guidance System (LOS)}
+
 
 \subsubsection{Pitch autopilot}
 The pitch autopilot is a closed-loop control system that continuously regulates the pitch of the tip. The autopilot layer consists of three primary components: a pitch angle converter, a feedback controller, and a tension converter. Together, these components transform the LOS heading reference into actuator-level tendon tension setpoints.
 
-
-\paragraph*{Pitch converter}
+\subsubsection{Pitch converter}
 The first step in the autopilot is estimating the measured pitch angle, \(\theta_{meas}\), from vision data. This is simply done by computing the angle between the z-axis and the 3D direction vector defined by the detected tip and pre-tip positions. 
 \begin{equation}
     \theta_{meas} = atan2(\vec{d}_x,\vec{d}_z)
 \end{equation}
-where \(\vec{d}_x\) and \(\vec{d}_z\) are the \(x\)- and \(z\)- components of the direction vector. This computation is implemented in the \texttt{PitchConverter} class,  which can be later changed with more sophisticated conversion strategies later on.
+where \(\vec{d}_x\) and \(\vec{d}_z\) are the \(x\)- and \(z\)- components of the direction vector. This computation is implemented in the \texttt{PitchConverter} class.
 
-\paragraph*{Feedback controller}
-The main component of the autopilot is the PI controller implemented in the \texttt{FeedbackController} class. The controller receives the pitch error, defined as 
+\subsubsection{Feedback controller}
+The main component of the pitch autopilot is the PI controller implemented in the \texttt{FeedbackController} class. The controller receives the pitch error, defined as 
 \begin{equation}
     \theta_e = \theta_{ref} - \theta_{meas}
 \end{equation}
-and calculates control output \(u\) intended to minimize the error. Since the ribbon system is highly damped, derivative control is unnecessary and therefore a PI controller was implemented with anti-windup for the integral term.
+and calculates a curvature command \(\kappa_{d,fb}\) intended to minimize the error. 
+\newline \newline 
+A curvature control output is natural here as the ribbon changes direction based on the bending of the distal segment. This bending does not directly set the orientation of the tip but instead defines the spatial rate of change of the orientation, that is, the curvature of the path followed by the tip. The curvature determines how the pitch angle evolves as the probe advances. Since the device moves at a constant speed the curvature can also be understood as the rate of change of the pitch angle \(\theta_m\), making it a useful control variable.
+\newline \newline
+Since the ribbon system is highly damped, derivative control is unnecessary and therefore a PI controller was implemented with anti-windup for the integral term.
 \begin{equation}
-    u(t) = K_p \theta_e(t) + K_i \int \theta_e(t)
+    \kappa_{d,fb}(t) = K_p \theta_e(t) + K_i \int \theta_e(t)
 \end{equation}
-Since the pitch control looped is triggered asynchronously by new vision data and the arrival time fo these updates may vary the effective sampling time \(\Deltat\) is computed each time using system timestamps. This ensures the validityof the integral terms.
+Since the pitch control loop is triggered asynchronously by new vision data and the arrival time fo these updates may vary, the effective sampling time \(\Deltat\) is computed each time using system timestamps. This ensures the validity of the integral terms.
+
+\subsubsection{Feedforward Calculator}
+There is also a feedforward component that provides open-loop commands to follow the curvatures in the desired path geometry. This is implemented in the \texttt{FeedforwardCalculator} class, which pre-computes actuation commands for each waypoint along the planned trajectory. 
+
+The \texttt{FeedforwardCalculator} processes the entire planned path to generate a lookup table of actuations indexed by waypoint position. This lookup table is based on previous characterization experiments that established the mapping between required tendon tension and achieved curvature. However, since the path generator creates trajectories consisting of discrete straight and curved segments, directly commanding the ideal tension for each segment would create large instantaneous changes that the physical tendon system cannot follow.
+
+To address this limitation, the feedforward controller implements a ramping strategy between segments. The ramp length is calculated based on the magnitude of the required actuation change and the known response capabilities of the tendon system:
+
+\begin{equation}
+\text{rampLength} = \frac{\text{setpointRampRate} \cdot v_{target} \cdot 1000}{|\kappa_{d,ff}(i+1) - \kappa_{d,ff}(i)|}
+\end{equation}
+
+The ramping region spans the end of the current segment and the beginning of the next segment, with the actuation linearly interpolated between the ideal values for each curvature. This approach allows the tendon system sufficient time and distance to transition smoothly between the required tensions for different path curvatures, ensuring that the feedforward commands remain physically realizable by the actuation hardware.
+
+
+\subsubsection{Ribbon Adapter}
+The control system also includes a \texttt{RibbonAdapter} that translates desired curvature commands from the feedback controller into the appropriate control variable \(u_{d,fb}\) for the specific ribbon device. This adaptation accounts for the individual curvature-tension characteristics of each ribbon. This conversion is based on the "air calibration" procedure described in the methods section, which establishes the realationship between applied differential tension and resulting tip curvature for the given ribbon. The conversion uses the experimentally determined slope and offset parameters that capture the ribbons mechanical response:
+\begin{equation}
+u = \frac{|\kappa_{output}| - \text{Offset}}{\text{Slope}}
+\end{equation}
+Then the controlvariable is given the same sign as the curvature to maintain the correct bending direction, with positive values corresponding to rightward deflection and negative values to leftward deflection.
 \newline \newline
 The output of the controller is a scalar actuation variable that represents the differential tension required between the left and right tendon groups. This value is later converted into explicit tendon tension setpoints in the next stage of the autopilot
 
 
-\paragraph*{Tension converter}
+\subsubsection{Tension converter}
 The final step in the control loop is converting the actuation variable that is defined as 
 \begin{equation}
     u(t) = T_{3, 4} - T_{2,1}
@@ -254,6 +282,8 @@ T_1 = T_2 = T_3 = T_4 = 100 \text{ mN} & \text{if } u = 0
 \end{cases}
 \end{equation}
 
+The \texttt{TensionConverter} class implements this conversion through the \texttt{convertToTension()} method, which also enforces maximum tension limits to prevent over-actuation that could damage the ribbon.
+
 
 
 \paragraph*{F}
@@ -262,6 +292,14 @@ T_1 = T_2 = T_3 = T_4 = 100 \text{ mN} & \text{if } u = 0
 
 
 \subsection{Discussion}
+
+This pre-computation approach ensures that the control system can anticipate required actuations rather than simply reacting to tracking errors. 
+
+The pre-computed path should be possible to follow by the ribbon
+
+This ribbon-specific adaptation ensures that the curvature commands produce the intended mechanical response regardless of individual device variations in stiffness, tendon routing, or assembly tolerances. The characterization-based approach allows the control system to compensate for these variations, improving the accuracy and consistency of curvature control across different ribbon assemblies and enabling precise path-following performance.
+
+
 
 \subsubsection{Pitch conversion improvements}
 
