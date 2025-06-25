@@ -19,19 +19,26 @@ Most steerable robotic devices are actuated in a fundementally different manner 
 Traditional tendon-driven continuum robots differ significantly to the device used here in their modeling despite their similar actuation. This because they deform continuously along their entire length under actuation forces. While in the ribbon device here it deforms primarily at the distal tip due to the interaction between the backbone and the surrounding brain tissue. Therefore existing continuum robot kinematic models, which assume distributed deformation, cannot be directly applied.
 
 \paragraph*{Steerable Needles}
-
+The device that is by far closest in its steering mechanism are steerable needles, particularly bevel-tip needles. Primarily since steerable needles utilize a deformation at only the tip in order to induce curvature during insertion. This leads to nonholonomic kinematics, meaning the needle's orientation and position are coupled in a way that constrains its possible instantaneous directions of movement i.e. it cannot more laterally without insertion \cite{webster_nonholonomic_2006}. Although steerable needles achieve directional control be rotating the bevel tip or moving segment of the tip as in Secoli et al's work \cite{secoli_adaptive_2016} \cite{secoli_closed-loop_2013}, their steering is still a highly relevant foundation for kinematic models for the tendon-driven ribbon-shaped device.
+\newline \newline 
+An effective 2D model was developed by Young Ko et al in \cite{ko_two-dimensional_2010}. The steerable probe is modelled as a planar nonholonomic system, where the curvature at the tip determines the trajectory insertion. This curvature is treated as an input to a unicycle-like kinematic model where the evolution of the probe¨s pose is governed by its insertion velocity and current curvature.
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.7\linewidth]{images/steerableNeedles/needlefig.png}
     \caption{Four part Steerable needle developed by Secoli et al \cite{secoli_closed-loop_2013}}
     \label{fig:fourpartneedle}
 \end{figure}
+Later Secoli and Rodriguez y Baena developed a 3D version for the same 4-part steerable needle (seen in figure \ref{fig:fourpartneedle}) inspired by underactuated underwater vehicles. The needle's motion is governed by nonholonomic constraints, with insertion along the x-axis and tip steering controlled by programmable offsets between interlocked needle segments. The model defines the needle's orientation using Euler angles (roll, pitch, yaw), with angular velocities about the pitch and yaw axes proportional to the segment offsets. This results in a non-linear, driftless kineamtic system, which they then convert into chained form coordinates for closed-loop feedback control.
 
-The device that is by far closest in its steering mechanism are steerable needles, particularly bevel-tip needles. Primarily since steerable needles utilize a deformation at only the tip in order to induce curvature during insertion. This leads to nonholonomic kinematics, meaning the needle's orientation and position are coupled in a way that constrains its possible instantaneous directions of movement i.e. it cannot more laterally without insertion \cite{webster_nonholonomic_2006}. Although steerable needles achieve directional control be rotating the bevel tip or moving segment of the tip as in Secoli et al's work \cite{secoli_adaptive_2016} \cite{secoli_closed-loop_2013}, their steering is still a highly relevant foundation for kinematic models for the tendon-driven ribbon-shaped device.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/steerableNeedles/Configuration-of-a-bevel-tip-needle-during-steering-showing-the-front-and-back-wheels.png}
+    \caption{Configuration of a bevel tipped needle during steering showing the front and back "wheels" \cite{webster_nonholonomic_2006}}
+    \label{fig:bicycle}
+\end{figure}
+A more complex strategy for modeling needle steering is the  model introduced by Webster et al. \cite{webster_nonholonomic_2006}, which treats needle insertion as a constrained control problem similar to a bicycle instead of a unicycle. In bevel-tip needles, the asymmetry at the tip induces lateral forces during insertion naturally creating a curved trajectory where orientation and position are interdependent. For a fixed needle shaft rotation, the model is similar to that of a bicycle with a front wheel angle and a back wheel angle that corresponds to the angle a certain distance from the tip of the needle as is shown in figure \ref{fig:bicycle}.
 \newline \newline
-A basis strategy for modeling needle steering is the nonholonomic model introduced by Webster et al. \cite{webster_nonholonomic_2006}, which treats needle insertion as a constrained control problem. In bevel-tip needles, the asymmetry at the tip induces lateral forces during insertion naturally creating a curved trajectory where orientation and position are interdependent. 
-
-Fallahi et al. further developed this approach by posing that for a fixed needle shaft rotation, the model is similar to that of a bicycle with a front wheel angle and a back wheel angle that corresponds to the angle a certain distance from the tip of the needle as is shown in figure \ref{}
+Fallahi et al. extended this model for soft tissue and created a model that accounts for non-constant curvature paths for the needle tip. Since for a tissue that is not stiff relative to the needle, the tissue deformation caused by needle insertion deviates the needle tip position. This model is obtained by replacing the bicycle wheels with omnidirectional wheels tha tmove in two orthogonal direction independently. Such wheels can move sideways, providing a means for modeling the deviations of the needle tip from a constant curvature path. \cite{fallahi_extended_2015}
 
 
 
@@ -96,11 +103,13 @@ Unlike geometric methods like LOS or pure pursuit, MPC can explicitly handle phy
 
 \subsection{Design}
 
-\subsubsection{Ribbon kinematic notation and definitions}
-As mentioned in the hardware section the ribbon device is moved up and down i.e. in the z-plane via control of the linear stage which is attatched at the proximal tip of the device. However movement in the x and y plane is controlled via controlling the tensions at the tendons which are attached to motors at the top and the tip of the ribbon at the bottom. When the ribbon is inserted in a brain phantom via the movement of the linear stage the direction it will move in will depend on the deflection of the tip. Which is in turn dependent on the tendon activation pattern which results in the bending or twisting of the tip. Since the device is constrained by the brain phantom a change in tendon tensions will not result in large deflections in the entire shape such as in a traditional tendon driven continuum robot, rather only the tip will deflect, leaving us with a very different kinematics. This makes the kinematics more similar to steerable needles rather than continuum robots, and since a 3D kinematic model of a steerable needle can be assumed to be similar to that of an underactued underwater vehicle \cite{secoli_closed-loop_2013}, we can assume the same here.  \todo{explain somewhere what steerable needles are}
+\subsubsection{Choice of Kinematic Modeling Approach}
+In the background chapter, several approached previously applied to modeling steerable needles were presented including 2D \cite{ko_two-dimensional_2010} and 3D unicycle models \cite{secoli_closed-loop_2013} as well as bicycle models \cite{webster_nonholonomic_2006} \cite{fallahi_extended_2015}. Based on this review and the physical differences between the ribbon device and the steerable needles a choice was made to begin with a 2D model inspired by the programmable bevel-tip needle work of Ko et al. \cite{ko_two-dimensional_2010}.This model has shown to be effective for steerable needles in soft tissue and its simplicity makes it a good starting off point. If the performance of this method proves insufficient another, more complex model may be adopted later.
 
-
-The kinematic modeling starts with the Euler angle representation, which describes the orientation between the global frane and the local body coordinate frame as three rotations: roll \(\\phi\), pitch \(\theta\) and yaw \(\psi\) which represent rotations about the local body cartesian axes \(x\), \(y\) and \(z\) respectively.
+\subsubsection{Final 2D Kinematic model}
+As mentioned in the hardware section the ribbon device is moved up and down i.e. in the z-plane via control of the linear stage which is attatched at the proximal tip of the device. However movement in the x and y plane is controlled via controlling the tensions at the tendons which are attached to motors at the top and the tip of the ribbon at the bottom. When the ribbon is inserted in a brain phantom via the movement of the linear stage its trajectory will depend on the deflection of the tip. Which is in turn dependent on the tendon activation pattern which results in the bending or twisting of the tip. 
+\newline \newline
+To capture this behavior a unicycle type model inpsired by \cite{ko_two-dimensional_2010} is used where the tip orientation is described using an Euler angle representation, which describes the orientation between the global frane and the local body coordinate frame as three rotations: roll \(\\phi\), pitch \(\theta\) and yaw \(\psi\) which represent rotations about the local body cartesian axes \(x\), \(y\) and \(z\) respectively.
 
 \todo{Figure: showing local body frame z, x, y and the three angles on the ribbon}
 
