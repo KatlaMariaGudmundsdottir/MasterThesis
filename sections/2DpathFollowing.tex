@@ -3,6 +3,38 @@
 \lhead{2D Path following} % section header
 
 \subsection{Background}
+\subsubsection{Kinematic Modeling of Similar Devices}
+Devices with kinematic similarities to the tendon-driven ribbon-shaped device primarily include steerable needles, concentric tube robots, and tendon-drive continuum robots. Each of these devices rely on structural flexibility and and actuation mechanism that creates a curvature or deformation that allows for navigating through soft biological tissues. Hoever none of them are directly applicable.
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/steerableNeedles/actuations.png}
+    \caption{Illustration of main actuation and steering mechanisms of small-scale robotic devices developed for brain interventions. Robotic devices can be navigated using (a) tendon-driven mechanisms, (b) magnetic forces and torques, (c) pneumatic systems,  (d) concentric tubes, and (e) slender features with beveled tips. \cite{noseda_small-scale_2024}}
+    \label{fig:actuations}
+\end{figure}
+
+\paragraph*{Magnetic, Pneumatic and Concentric Tube robots}
+Most steerable robotic devices are actuated in a fundementally different manner to the tendon driven ribbon device and must therefore also be steered in a very different way. Magnetic actuation relies on external magnetic fields interacting with embedded magnets \todo{cite}. Pneumatic systems induce curvature by inflating internal chambers which results in a deformation along the entire device  \todo{cite}. Concentric tube robots utilize nested tubes with pre-defined curvatures actuated through relative rotation and translation. Consequently all of these devices kinematics models are not directly transferable to tendon-driven ribbon-shaped devices.
+
+\paragraph*{Traditional tendon-driven continuum robots}
+Traditional tendon-driven continuum robots differ significantly to the device used here in their modeling despite their similar actuation. This because they deform continuously along their entire length under actuation forces. While in the ribbon device here it deforms primarily at the distal tip due to the interaction between the backbone and the surrounding brain tissue. Therefore existing continuum robot kinematic models, which assume distributed deformation, cannot be directly applied.
+
+\paragraph*{Steerable Needles}
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/steerableNeedles/needlefig.png}
+    \caption{Four part Steerable needle developed by Secoli et al \cite{secoli_closed-loop_2013}}
+    \label{fig:fourpartneedle}
+\end{figure}
+
+The device that is by far closest in its steering mechanism are steerable needles, particularly bevel-tip needles. Primarily since steerable needles utilize a deformation at only the tip in order to induce curvature during insertion. This leads to nonholonomic kinematics, meaning the needle's orientation and position are coupled in a way that constrains its possible instantaneous directions of movement i.e. it cannot more laterally without insertion \cite{webster_nonholonomic_2006}. Although steerable needles achieve directional control be rotating the bevel tip or moving segment of the tip as in Secoli et al's work \cite{secoli_adaptive_2016} \cite{secoli_closed-loop_2013}, their steering is still a highly relevant foundation for kinematic models for the tendon-driven ribbon-shaped device.
+\newline \newline
+A basis strategy for modeling needle steering is the nonholonomic model introduced by Webster et al. \cite{webster_nonholonomic_2006}, which treats needle insertion as a constrained control problem. In bevel-tip needles, the asymmetry at the tip induces lateral forces during insertion naturally creating a curved trajectory where orientation and position are interdependent. 
+
+Fallahi et al. further developed this approach by posing that for a fixed needle shaft rotation, the model is similar to that of a bicycle with a front wheel angle and a back wheel angle that corresponds to the angle a certain distance from the tip of the needle as is shown in figure \ref{}
+
+
+
 \subsubsection{Path Following Definition}
 Path following is a  motion control scenario where a “vessel” has to follow a predefined path without any time constraints \cite{caharija_integral_2016}. It thereby differs to trajectory tracking since the path is not parameterized by time, but rather by another useful parameter \cite{hung_review_2023}, such as path length. 
 
@@ -58,30 +90,7 @@ Model Predictive Control (MPC) is an optimization-based approach that computes c
 \newline \newline
 Unlike geometric methods like LOS or pure pursuit, MPC can explicitly handle physical constraints and nonlinear dynamics. Linear model predictive control, nonlinear MPC and learning-based MPC have all been used in path following research \cite{hung_review_2023}. However they are complicated in terms of design and implementation since they involve solving an optimization problem online. Yet since they deal with the vehicle's input constraints i.e. velocity and angular rate explicitly they are  expected to outperform other path following strategies in cases that require teh vehicle to maneuver more agressively. Another advantage is that they can incoroprate more easily other tasks such as obstacle avoidance in the path following problem. Although using these methods is particularly challenging in environments and with devices that are not easily modeled.
 
-\subsubsection{Kinematic Modeling of Similar Devices}
-Devices with kinematic similarities to the tendon-driven ribbon-shaped device primarily include steerable needles, concentric tube robots, and tendon-drive continuum robots. Each of these devices rely on structural flexibility and and actuation mechanism that creates a curvature or deformation that allows for navigating through soft biological tissues. Hoever none of them are directly applicable.
-\begin{figure}
-    \centering
-    \includegraphics[width=0.9\linewidth]{images/steerableNeedles/actuations.png}
-    \caption{Illustration of main actuation and steering mechanisms of small-scale robotic devices developed for brain interventions. Robotic devices can be navigated using (a) tendon-driven mechanisms, (b) magnetic forces and torques, (c) pneumatic systems,  (d) concentric tubes, and (e) slender features with beveled tips. \cite{noseda_small-scale_2024}}
-    \label{fig:actuations}
-\end{figure}
 
-\paragraph*{Traditional tendon-driven continuum robots}
-Traditional tendon-driven continuum robots differ significantly to the device used here in their modeling despite their similar actuation. This because they deform continuously along their entire length under actuation forces. While in the ribbon device here it deforms primarily at the distal tip due to the interaction between the backbone and the surrounding brain tissue. Therefore existing continuum robot kinematic models, which assume distributed deformation, cannot be directly applied.
-
-\paragraph*{Magnetic, Pneumatic and Concentric Tube robots}
-Most steerable robotic devices are actuated in a fundementally different manner to the tendon driven ribbon device and must therefore also be steered in a very different way. Magnetic actuation relies on external magnetic fields interacting with embedded magnets \todo{cite} \todo{expand a bit}. Pneumatic systems induce curvature by inflating internal chambers which results in a deformation along the entire device  \todo{cite}. Concentric tube robots utilize nested tubes with pre-defined curvatures actuated through relative rotation and translation. Consequently all of these devices kinematics models are not directly transferable to tendon-driven ribbon-shaped devices.
-
-\paragraph*{Steerable Needles}
-The device that is by far closest in its steering mechanism are steerable needles, particularly bevel-tip needles. Primarily since steerable needles utilize a deformation at only the tip in order to induce curvature during insertion. This leads to nonholonomic kinematic 
-
-\begin{figure} [H]
-    \centering
-    \includegraphics[width=0.7\linewidth]{images/steerableNeedles/6631416-fig-1-source-large.png}
-    \caption{Four part Steerable needle developed by Secoli et al \cite{secoli_closed-loop_2013}}
-    \label{fig:fourpartneedle}
-\end{figure}
 
 
 
