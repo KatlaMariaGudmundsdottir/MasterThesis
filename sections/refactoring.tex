@@ -4,7 +4,7 @@
 
 \subsection{Theory}
 \subsubsection{Software architecture for real-time systems}
-Real-time systems require software that is not functional but also predictable and responsive under strict timing constraints, which place additional demands on software design. According to McConnel \cite{steve_mcconnell_code_nodate}, high-quality architecture in such should emphaize simplicity, clarity, and robustness to change. 
+Real-time systems require software that is predictable and responsive, even under strict timing constraints. This places additional demands on the software design, especially since codebases for such system may grow rapidly when there is necessity for GUI handling, hardware commands, control calculations and communication protocols. According to McConnel \cite{steve_mcconnell_code_nodate}, high-quality architecture in such systems should emphasize simplicity, clarity, and robustness to change. 
 \newline \newline
 A well-structured architecture improves maintainability and extensibility by making the system easier to understand and reason about. In real-time contexts, this often translates into an architecture that minimizes dependencies betwen components and provides clear seperation between hardware interaction, control logic, and application-level coordination \cite{tanenbaum_distributed_2007}.
 
@@ -62,6 +62,15 @@ To support real-time perfomance and responsiveness, multithreading was introduce
 
 
 \subsection{Results}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\linewidth]{images/Software documentation/architecture3.png}
+	\caption{Final control code base architecture after refactoring}
+	\label{fig:architecture}
+\end{figure}
+
+
 
 \todo{figure of new architecture!}
 \todo{figure of threads!}

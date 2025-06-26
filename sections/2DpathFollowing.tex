@@ -113,8 +113,7 @@ To capture this behavior a unicycle type model inpsired by \cite{ko_two-dimensio
 
 \todo{Figure: showing local body frame z, x, y and the three angles on the ribbon}
 
-\subsubsection{Kinematic model}
-In the 2D kinematic model we assume the global y-position to be constant and thus using no velocity in the y-position and the rotation revolves around the local y-axis. The rotational matrix thereby becomes
+In the 2D kinematic model we assume the global y-position to be constant and thus there is no velocity component along that axis. When the tip bends in order to follow a trajectory it is performing a rotation around the local y-axis. The rotational matrix thereby becomes
 \begin{equation}
     \textbf{R} = \textbf{R}(\theta) = \begin{bmatrix}
         cos \theta   &   0   &   -sin \theta \\
@@ -129,6 +128,7 @@ Thereby the kinematic model becomes
 \begin{equation}
     \vec{v_g} = \textbf{R}(\theta) \vec{v_b}
 \end{equation}
+Where $\vec{v_g}$ signifies the velocity of the tip in the global frame, \textbf{R}$\theta$ is the rotational matrix around the y-axis that transforms the body velocity of the tip of the ribbon given in the body frame $\vec{v_b}$ to the global frame. Inserting the previously defined rotational matrix we have:
 \begin{equation}
     \begin{bmatrix}
         \dot{x}(t)\\ \dot{y}(t)\\ \dot{z}(t)
@@ -136,40 +136,61 @@ Thereby the kinematic model becomes
     \begin{bmatrix}
         cos \theta   &   0   &   -sin \theta \\
         0            &   1   &   0\\
-        sin \theta   &   0   &   cos \theta
+       -sin \theta   &   0   &   cos \theta
     \end{bmatrix}
     \begin{bmatrix}
         v_x^b \\ v_y^b \\ v_z^b
     \end{bmatrix}
 \end{equation}
+
 \begin{equation}
     \begin{bmatrix}
         \dot{x}(t)\\ \dot{y}(t)\\ \dot{z}(t)
     \end{bmatrix} = \begin{bmatrix}
-        v_x^bcos \theta - v_y^b sin \theta\\
+        v_x^bcos \theta - v_z^b sin \theta\\
         v_y^b\\
-        v_x^b sing \theta + v_z^b cos \theta
+        v_x^b sin \theta  v_z^b cos \theta
     \end{bmatrix}
 \end{equation}
-Where \(\vec{v_b}\) is the velocity of the tip of the ribbon given in the body frame. However since we are in the 2D case where \(v_y^b = 0\) we can simplify this to:
+However since we are in the 2D case where \(v_y^b = 0\) we can simplify this to:
 \begin{equation}
         \begin{bmatrix}
         \dot{x}(t)\\ \dot{z}(t)
     \end{bmatrix} = \begin{bmatrix}
-        v_x^bcos \theta - v_y^b sin \theta\\
-        v_x^b sing \theta + v_z^b cos \theta
+        v_x^bcos \theta - v_z^b sin \theta\\
+        v_x^b sin \theta + v_z^b cos \theta
     \end{bmatrix}
 \end{equation}
-We can further simplify this by assuming that 
+\todo{explain why we can simplify to only the z-axis speed} .... Thus we have that:
+\begin{equation}
+	\begin{bmatrix}
+	\dot{x(t)} \\ \dot{z(t)}
+	\end{bmatrix} = \begin{bmatrix}
+	-sin\theta \\ cos\theta
+	\end{bmatrix} v_z^b
+\end{equation}
 
+\newline \newline
+In terms of the instantaneous curvature, it is defined by the relationship between the rotational velocity ($\dot{\theta}$) and the insertion velocity $v_z^b$. The instantaneous curvature $\kappa_{tip}$ at the tip is assumed to be a function of the difference in tension between the tendons on the right and left side, the actuation variable defined as $u$. Where $f(u)$ is a monotonically increasing function of the actuation variable. In this project this is simplified to be a linear function, independent of previous states and defined by only the offset $b$ and the slope $a$. 
+\begin{equation}
+	\kappa_{tip} = f(u) = a\cdot u + b
+\end{equation}
+Including the angular velocity in the system model we thus have
+\begin{equation}
+	\begin{bmatrix}
+		\dot{x(t)} \\ \dot{z(t)} \\ \dot{\theta}
+	\end{bmatrix} = \begin{bmatrix}
+	-sint\theta \\ cos\theta \\ f(u)
+	\end{bmatrix}v_z^b
+\end{equation}
+
+We
 
 \todo{Figure: same figure as in ribbon kinematic model page calle ribbon system 2D, theta}
 
 In order to simplify the control problem of the tendon driven ribbon we look at what is possible to control. 
 
 
-
-\todo{see steerable needles, see if they have better explanations}.
 
 \subsubsection{Final 2D Control System Design}
 
@@ -200,6 +221,9 @@ The chosen path-following strategy must above all be reliable, modular and suit 
 Although more advanced techniques such as MPC or more advanced form of adaptive control could provide better performance in theory, they are currently impractical for this system. In particular, implementing MPC poses siggnificant challenges because of teh highly nonlinear and complex dynamics of the ribbon. The tendon actuation results in strong coupling between degrees of freedom and the deformation fo the ribbon is influenced by wear, material hysteresis, bucklin and loading history. The future surgical environment adds another layer of complexity through contact forces with tissue that are difficult to predict and incorporate into the optimization framework. All of which make it extremely difficult to develop an accurate predictive model required for MPC.
 \newline \newline
 For these reasons, LOS offers a better, more practical solution. LOS is relatively straightforward to implement and has good convergence properties in undisturbed environments. It is also very easy to expand upon by adding a integral term, creating a ILOS guidance system that would better handle disturbances. It can even be made adaptive by making the look-ahead distance change based on chosen factors. It is therefore a good starting off point for the system.
+
+\subsubsection{LOS Guidance System Design}
+
 
 
 \subsection{Methods}
