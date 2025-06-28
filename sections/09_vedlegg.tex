@@ -5,13 +5,67 @@
 \section{Vedlegg}
 \lhead{Vedlegg} % section header
 
-\setstretch{1.6}
+\appendix
+\section{Protocol for Running the Experimental Setup}
+\label{app:protocol}
 
-%\begin{enumerate}
- % \item URL
-  %\item URL
-  
-%\end{enumerate}
+This appendix outlines the step-by-step procedure required to run the Ribbit system, including initialization of the hardware and software components. This protocol ensures the correct startup and calibration of the robotic system and the real-time vision module.
+
+\subsection*{Required Software and Hardware}
+\begin{itemize}
+    \item Qt Creator (to run the Ribbit GUI)
+    \item Visual Studio (to run the 2D Vision real-time system)
+    \item Brushless motor power supply (set to 12\,V)
+    \item LED light source
+\end{itemize}
+
+\subsection*{Startup and Initialization Protocol}
+
+\begin{enumerate}
+    \item \textbf{Launch Qt Creator.} Open the Ribbit program.
+    \item \textbf{Launch Visual Studio.} Open the \texttt{2D\_vision\_realtime} project.
+    \item \textbf{Power on the system:}
+    \begin{itemize}
+        \item Turn on the 12\,V power supply for the brushless motors.
+        \item Turn on the LED light source.
+    \end{itemize}
+    \item \textbf{Run the vision system:} Start the vision code from within Visual Studio.
+    \item \textbf{Run the Qt GUI:} Compile and run the Ribbit program in Qt Creator.
+\end{enumerate}
+
+\subsection*{Initial PID Setup and Linear Stage Calibration}
+
+\begin{enumerate}[resume]
+    \item When the GUI opens, navigate to the \textbf{PID Controller} tab.
+    \item If this is the first session of the day:
+    \begin{enumerate}
+        \item Set the four tendon tension setpoints to your desired initial values.
+        \item Press \textbf{Start PID}.
+        \item Press the \textbf{Reference} button to calibrate the linear stage.
+        \item Wait for the referencing process to complete.
+        \item Press \textbf{Stop PID}.
+    \end{enumerate}
+    \item Move the linear stage back by 2\,mm using the \textbf{Move to Position} function.
+    \item Press the \textbf{Calibrate} button for each force sensor to zero the force readings.
+\end{enumerate}
+
+\subsection*{Final Setup for Operation}
+
+\begin{enumerate}[resume]
+    \item After sensor calibration, set the tendon tension setpoints to \textbf{100} for each channel.
+    \item Press \textbf{Set} to confirm the new setpoints.
+    \item Press \textbf{Start PID}.
+    \item Go to the \textbf{Move to Position} field, enter \textbf{145\,mm}, and press \textbf{Move}.
+    \item Wait for the linear stage to reach position. At this point, the tip should be exiting the robotic device and the system is ready for operation.
+\end{enumerate}
+
+\subsection*{Notes}
+\begin{itemize}
+    \item Always ensure the linear stage is referenced before moving to any absolute position.
+    \item Force sensor calibration should be done only after referencing and initial positioning.
+    \item Setpoint values can be adjusted depending on the specific experimental conditions.
+\end{itemize}
+
 
 %=================================================================
 %                           End Document
