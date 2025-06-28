@@ -118,7 +118,16 @@ To capture this behavior a unicycle type model inspired by \cite{ko_two-dimensio
     \label{fig:planes}
 \end{figure}
 
-In the 2D kinematic model we assume the global y-position to be constant and thus there is no velocity component along that axis. When the tip bends in order to follow a trajectory it is performing a rotation around the local y-axis in the x-z-plane as is visualized in figure \. The rotational matrix thereby becomes
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{images/pythonpictures/Capture.PNG}
+    \caption{Visualization of the $\theta$ angle the determines the rotation around the local y-axis}
+    \label{fig:theta}
+\end{figure}
+
+In the 2D kinematic model we assume the global y-position to be constant and thus there is no velocity component along that axis. When the tip bends in order to follow a trajectory it is performing a rotation around the local y-axis in the x-z-plane as is visualized in figure \ref{fig:theta} and \ref{fig:planes}. The rotational matrix thereby becomes
+
 \begin{equation}
     \textbf{R} = \textbf{R}(\theta) = \begin{bmatrix}
         cos \theta   &   0   &   -sin \theta \\
@@ -127,8 +136,6 @@ In the 2D kinematic model we assume the global y-position to be constant and thu
     \end{bmatrix}
 \end{equation}
 and the kinematic model becomes
-\todo{decide if it should be called global or inertial frame, what is the difference?}
-\todo{decide on v notation}
 \begin{equation}
     \vec{v_g} = \textbf{R}(\theta) \vec{v_b}
 \end{equation}
@@ -174,15 +181,19 @@ Further since the ribbon is inserted via the linear stage moving the backbone do
 	\end{bmatrix} v_z^b
 \end{equation}
 
-\newline \newline
 In terms of the rotational velocity, it is defined by the relationship between the instantaneous curvature $\kappa$ at the tip and the insertion velocity $v_z^b$. Since 
 \begin{equation}
     \frac{d}{dt}\theta  = \frac{d\theta}{ds}\frac{ds}{dt}=\kappa v_z^b
 \end{equation}
 
-\begin{}
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{images/pythonpictures/curvature.PNG}
+    \caption{Visualization of how the curvature of the tip $\kappa$ controlled by the difference in tension on the left side \(T_1, T_2\) and right \(T_3, T_4\) influences the trajectory of the ribbon}
+    \label{fig:curvature}
+\end{figure}
 
-The instantaneous curvature $\kappa_{tip}$ is further assumed to be a function of the difference in tension between the tendons on the right and left side $f(u)$, which is given by the actuation variable defined as $u$. Where $f(u)$ is a monotonically increasing function of the actuation variable. In this project this is simplified to be a linear function, independent of previous states and defined by only the offset $b$ and the slope $a$. 
+The instantaneous curvature $\kappa_{tip}$, visualized in figure \ref{fig:curvature} is further assumed to be a function of the difference in tension between the tendons on the right and left side $f(u)$, which is given by the actuation variable defined as $u$. Where $f(u)$ is a monotonically increasing function of the actuation variable. In this project this is simplified to be a linear function, independent of previous states and defined by only the offset $b$ and the slope $a$. 
 \begin{equation}
 	\kappa_{tip} = f(u) = a\cdot u + b
 \end{equation}
@@ -195,9 +206,6 @@ Including the angular velocity in the system model we arrive at the final 2D mod
 	-sin\theta \\ cos\theta \\ f(u)
 	\end{bmatrix}v_z^b
 \end{equation}
-
-
-\todo{Figure: same figure as in ribbon kinematic model page calle ribbon system 2D, theta}
 
 
 
@@ -232,6 +240,13 @@ Although more advanced techniques such as MPC or more advanced form of adaptive 
 For these reasons, LOS offers a better, more practical solution. LOS is relatively straightforward to implement and has good convergence properties in undisturbed environments. It is also very easy to expand upon by adding a integral term, creating a ILOS guidance system that would better handle disturbances. It can even be made adaptive by making the look-ahead distance change based on chosen factors. It is therefore a good starting off point for the system.
 
 \subsubsection{Final LOS Guidance System Design}
+
+\begin{figure}[h!]
+    \centering
+    \input{pathf}
+    \caption{Geometric interpretation of LOS guidance.}
+    \label{fig:los_diagram}
+\end{figure}
 
 
 
