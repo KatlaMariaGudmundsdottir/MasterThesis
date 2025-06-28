@@ -109,9 +109,14 @@ In the background chapter, several approached previously applied to modeling ste
 \subsubsection{Final 2D Kinematic model}
 As mentioned in the hardware section the ribbon device is moved up and down i.e. in the z-plane via control of the linear stage which is attatched at the proximal tip of the device. However movement in the x and y plane is controlled via controlling the tensions at the tendons which are attached to motors at the top and the tip of the ribbon at the bottom. When the ribbon is inserted in a brain phantom via the movement of the linear stage its trajectory will depend on the deflection of the tip. Which is in turn dependent on the tendon activation pattern which results in the bending or twisting of the tip. 
 \newline \newline
-To capture this behavior a unicycle type model inpsired by \cite{ko_two-dimensional_2010} is used where the tip orientation is described using an Euler angle representation, which describes the orientation between the global frane and the local body coordinate frame as three rotations: roll \(\\phi\), pitch \(\theta\) and yaw \(\psi\) which represent rotations about the local body cartesian axes \(x\), \(y\) and \(z\) respectively.
+To capture this behavior a unicycle type model inspired by \cite{ko_two-dimensional_2010} is used where the tip orientation is described using an Euler angle representation, which describes the orientation between the global frane and the local body coordinate frame as three rotations: roll \(\\phi\), pitch \(\theta\) and yaw \(\psi\) which represent rotations about the local body cartesian axes \(x\), \(y\) and \(z\) respectively.
 
-\todo{Figure: showing local body frame z, x, y and the three angles on the ribbon}
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/planes.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
 
 In the 2D kinematic model we assume the global y-position to be constant and thus there is no velocity component along that axis. When the tip bends in order to follow a trajectory it is performing a rotation around the local y-axis. The rotational matrix thereby becomes
 \begin{equation}
