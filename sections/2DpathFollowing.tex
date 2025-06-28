@@ -114,11 +114,11 @@ To capture this behavior a unicycle type model inspired by \cite{ko_two-dimensio
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.7\linewidth]{images/planes.png}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \caption{Visualization of the definition of Euler angles for the ribbon system and its analogy to vehicle models}
+    \label{fig:planes}
 \end{figure}
 
-In the 2D kinematic model we assume the global y-position to be constant and thus there is no velocity component along that axis. When the tip bends in order to follow a trajectory it is performing a rotation around the local y-axis. The rotational matrix thereby becomes
+In the 2D kinematic model we assume the global y-position to be constant and thus there is no velocity component along that axis. When the tip bends in order to follow a trajectory it is performing a rotation around the local y-axis in the x-z-plane as is visualized in figure \. The rotational matrix thereby becomes
 \begin{equation}
     \textbf{R} = \textbf{R}(\theta) = \begin{bmatrix}
         cos \theta   &   0   &   -sin \theta \\
@@ -126,8 +126,7 @@ In the 2D kinematic model we assume the global y-position to be constant and thu
         sin \theta   &   0   &   cos \theta
     \end{bmatrix}
 \end{equation}
-
-Thereby the kinematic model becomes
+and the kinematic model becomes
 \todo{decide if it should be called global or inertial frame, what is the difference?}
 \todo{decide on v notation}
 \begin{equation}
@@ -136,7 +135,7 @@ Thereby the kinematic model becomes
 Where $\vec{v_g}$ signifies the velocity of the tip in the global frame, \textbf{R}$\theta$ is the rotational matrix around the y-axis that transforms the body velocity of the tip of the ribbon given in the body frame $\vec{v_b}$ to the global frame. Inserting the previously defined rotational matrix we have:
 \begin{equation}
     \begin{bmatrix}
-        \dot{x}(t)\\ \dot{y}(t)\\ \dot{z}(t)
+        \dot{x}\\ \dot{y}\\ \dot{z}
     \end{bmatrix} = 
     \begin{bmatrix}
         cos \theta   &   0   &   -sin \theta \\
@@ -150,7 +149,7 @@ Where $\vec{v_g}$ signifies the velocity of the tip in the global frame, \textbf
 
 \begin{equation}
     \begin{bmatrix}
-        \dot{x}(t)\\ \dot{y}(t)\\ \dot{z}(t)
+        \dot{x}\\ \dot{y}\\ \dot{z}
     \end{bmatrix} = \begin{bmatrix}
         v_x^bcos \theta - v_z^b sin \theta\\
         v_y^b\\
@@ -160,40 +159,45 @@ Where $\vec{v_g}$ signifies the velocity of the tip in the global frame, \textbf
 However since we are in the 2D case where \(v_y^b = 0\) we can simplify this to:
 \begin{equation}
         \begin{bmatrix}
-        \dot{x}(t)\\ \dot{z}(t)
+        \dot{x}\\ \dot{z}
     \end{bmatrix} = \begin{bmatrix}
         v_x^bcos \theta - v_z^b sin \theta\\
         v_x^b sin \theta + v_z^b cos \theta
     \end{bmatrix}
 \end{equation}
-\todo{explain why we can simplify to only the z-axis speed} .... Thus we have that:
+Further since the ribbon is inserted via the linear stage moving the backbone down the velocity along the ribbons z-axis will be the only significant velocity component in a stiff medium, therefore we can further simplify the model to.
 \begin{equation}
 	\begin{bmatrix}
-	\dot{x(t)} \\ \dot{z(t)}
+	\dot{x} \\ \dot{z}
 	\end{bmatrix} = \begin{bmatrix}
 	-sin\theta \\ cos\theta
 	\end{bmatrix} v_z^b
 \end{equation}
 
 \newline \newline
-In terms of the instantaneous curvature, it is defined by the relationship between the rotational velocity ($\dot{\theta}$) and the insertion velocity $v_z^b$. The instantaneous curvature $\kappa_{tip}$ at the tip is assumed to be a function of the difference in tension between the tendons on the right and left side, the actuation variable defined as $u$. Where $f(u)$ is a monotonically increasing function of the actuation variable. In this project this is simplified to be a linear function, independent of previous states and defined by only the offset $b$ and the slope $a$. 
+In terms of the rotational velocity, it is defined by the relationship between the instantaneous curvature $\kappa$ at the tip and the insertion velocity $v_z^b$. Since 
+\begin{equation}
+    \frac{d}{dt}\theta  = \frac{d\theta}{ds}\frac{ds}{dt}=\kappa v_z^b
+\end{equation}
+
+\begin{}
+
+The instantaneous curvature $\kappa_{tip}$ is further assumed to be a function of the difference in tension between the tendons on the right and left side $f(u)$, which is given by the actuation variable defined as $u$. Where $f(u)$ is a monotonically increasing function of the actuation variable. In this project this is simplified to be a linear function, independent of previous states and defined by only the offset $b$ and the slope $a$. 
 \begin{equation}
 	\kappa_{tip} = f(u) = a\cdot u + b
 \end{equation}
-Including the angular velocity in the system model we thus have
+
+Including the angular velocity in the system model we arrive at the final 2D model:
 \begin{equation}
 	\begin{bmatrix}
-		\dot{x(t)} \\ \dot{z(t)} \\ \dot{\theta}
+		\dot{x} \\ \dot{z} \\ \dot{\theta}
 	\end{bmatrix} = \begin{bmatrix}
-	-sint\theta \\ cos\theta \\ f(u)
+	-sin\theta \\ cos\theta \\ f(u)
 	\end{bmatrix}v_z^b
 \end{equation}
 
-We
 
 \todo{Figure: same figure as in ribbon kinematic model page calle ribbon system 2D, theta}
-
-In order to simplify the control problem of the tendon driven ribbon we look at what is possible to control. 
 
 
 
@@ -227,7 +231,7 @@ Although more advanced techniques such as MPC or more advanced form of adaptive 
 \newline \newline
 For these reasons, LOS offers a better, more practical solution. LOS is relatively straightforward to implement and has good convergence properties in undisturbed environments. It is also very easy to expand upon by adding a integral term, creating a ILOS guidance system that would better handle disturbances. It can even be made adaptive by making the look-ahead distance change based on chosen factors. It is therefore a good starting off point for the system.
 
-\subsubsection{LOS Guidance System Design}
+\subsubsection{Final LOS Guidance System Design}
 
 
 
