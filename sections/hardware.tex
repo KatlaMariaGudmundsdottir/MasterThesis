@@ -1,10 +1,12 @@
 \setstretch{1.6}
 \sectiontitle{4}{Hardware}
 \lhead{Hardware} % section header
-The robot itself consists of a ribbon-shaped (i.e. rectangular cross-section) tendon-actuated decive controlled from the proximal end by a robotic manipulation system. Depending on the tendon tension patterns, the flexible structure will bend or twist at the distal end, allowing for navigational control. \cite{noseda_flat_2024}
+The hardware system for this project consists of a ribbon-shaped device, actuated by tendons and controlled from the proximal end using a robotic manipulation setup. By varying the tension in the tendons, the flexible structure bends and twists at the distal end, enabling navigation. To enable closed loop control a vision system tracks the movement of the ribbon in real time using two cameras. Finally for testing and development, the device is inserted into a brain phantom designed to replicate the mechanical properties of brain tissue. This section describes the key hardware components of the system and explains in broad strokes the reasoning behind their selection, with a focus on how they work in context of navigation.
 
 
 \subsection{Device}
+
+
 The base material polyimide *PI(, has been extensively used for the microfabrication of flexible sensors \cite{noseda_flat_2024}.
 
 The device has two main parts: the backbone and the tendons. The device has four tendons, two attatched at each side of the backbone at its tip. This configuration allows steering in 2D by having differing tendon tensions on the two sides of the ribbon. It can additionally be used to steer in 3D by also exploiting the twisting manouvering that occurs if tendons placed diagonally are pulled.
