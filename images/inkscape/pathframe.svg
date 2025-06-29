@@ -27,12 +27,12 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="2"
-     inkscape:cx="355.25"
+     inkscape:cx="522.75"
      inkscape:cy="273.75"
      inkscape:window-width="1284"
      inkscape:window-height="1040"
-     inkscape:window-x="339"
-     inkscape:window-y="68"
+     inkscape:window-x="2039"
+     inkscape:window-y="78"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"
      showguides="false" />
@@ -422,7 +422,7 @@
        id="text73219"><tspan
          sodipodi:role="line"
          id="tspan73217"
-         style="stroke-width:0.264583"></tspan></text>
+         style="stroke-width:0.264583" /></text>
     <text
        xml:space="preserve"
        style="font-size:3.52777px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';fill:#a234ec;fill-opacity:1;stroke:#a234ec;stroke-width:0.065;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
@@ -499,7 +499,7 @@
            style="font-size:2.46944px;baseline-shift:sub;fill:#00a0f3;fill-opacity:1;stroke:#00a0f3;stroke-opacity:1">p</tspan><tspan
            style="font-size:2.82222px;line-height:2.45;fill:#00a0f3;fill-opacity:1;stroke:#00a0f3;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
            id="tspan133643-4"
-           dy="-0.66000003">(t)</tspan></tspan></text>
+           dy="-0.66000003">(ε)</tspan></tspan></text>
     <path
        style="fill:none;fill-opacity:1;stroke:#14ad00;stroke-width:0.3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Mstart)"
        id="path262951"
