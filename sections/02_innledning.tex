@@ -24,19 +24,18 @@ To address this unmet need the MICROBS lab has developed a novel ribbon-shaped, 
 \lhead{Introduction - Project Interpretation}
 \subsection{Project Interpretation}
 
-This project aims to develop a closed-loop navigational system for a ribbon-shaped robotic device in brain tissue. To that end several steps outlined as steps 1-4 in the project description needed to be completed before moving on to the closed loop design. The primary
-goal, despite the project’s broad scope, was to create reliable and well-documented work grounded in established theory and literature. This approach ensures that the project can serve as a foundation for further development and a robust proof of concept that can be used for demonstrations for clinicians as well as engineers.
-
-Since this is as far as the writer know, the first system of this kind and it poses significant control complexities it is expected that significant time must be invested in developing the mathematics of the system. Given the timeframe of the project and the number of tasks that must be completed before one can move on to the actual navigational challenges, the focus is to implement a robust 2D control strategy instead of attempting to rush the tasks in order to impement a full 3D. The priority is therefore to perform the prerequisite tasks for the 2D  navigation in a thorough and scientifically robust manner. For the 2D pathfollowing there is also a strong focus on robust implementation that is as well implemented in a highly modular way such that if parts of the system were to be further developed it would be easy. The ultimate goal was to deliver a reusable and scalable system, rather than risking the need for extensive later revisions by attempting to implement a more complex solution within the limited timeframe.
-
-Although the focus is on robust implementation, I also aim to explore how theoretically the system may be further developed and scaled in order to achieve optimal performance. Therefore this thesis also details the ways in which the modules may be expanded upon in further revisions and the mathematical concepts that may be employed later on. It also includes the last point in the project description which is extension of the 2D control framework into 3D.
-
-
+This project aims to develop a closed-loop navigational system for a ribbon-shaped robotic device in brain tissue. In addition several preliminary tasks, outlined as  as steps 1-4 in the project description, needed to be completed before moving on to the closed loop design. The number of required tasks made the scope of the project quite broad. However, the primary goal from the outset was to produce reliable, well-documented work rooted in established theory. Early in the project, it was therefore agreed that if necessary, certain tasks could be scaled back or omitted to allow for a more thorough solution to the remaining ones. This was considered an important tradeoff to ensure that the project could serve as a solid foundation for further development and function as a robust proof of concept that could be used for demonstration to both clinicians and engineers.
+\newline \newline
+To the best of the author's knowledge, this is the first system of its kind and it thereby poses new and significant control challenges. As such, it was expected that a substantial portion of the project would need to be spent on developing the mathematical foundations of the system. Given the project's limited timeframe and the number of prerequisite tasks required before addressing the core navigation problem, it was decided that focus would be on implementing a robust 2D control strategy rather than rushing to implement a full 3D solution. Since the system will most likely be expanded upon or altered later on, special attention was  given to implementing the system in a robust and modular way in the codebase. Therefore the first step of refactoring was deemed essential. The overall goal being to deliver a reusable, scalable system that avoids the need for major rework in future development, rather than pursuing a more complex solution at the cost of quality or maintainability. 
+\newline \newline
+Although the focus is on robust implementation, the aim was also to explore how theoretically the system may be further developed and scaled in order to achieve optimal performance. Therefore this thesis also details the ways in which the modules may be expanded upon in further revisions and the mathematical concepts that may be employed later on. It also includes some ideas for the last point in the project description which is extension of the 2D control framework into 3D.
 
 \subsection{Project Context}
 \lhead{Introduction - Project Context}
 
-This thesis builds upon an ongoing project at the MICROBS lab at EPFL towards developing a novel ribbon-shaped, tendon-driven continuum microrobot for minimally invasive neurosurgical interventions. The request for a closed loop control mechanism for the device came from Lorenzo Noseda who is doing his PhD in the device itself. 
+This thesis builds upon an ongoing project at the MICROBS lab at EPFL towards developing a novel ribbon-shaped, tendon-driven continuum microrobot for minimally invasive neurosurgical interventions. The request for a closed loop control mechanism for the device came from Lorenzo Noseda who designed the device 
+
+.....
 
 
 
@@ -44,9 +43,18 @@ This thesis builds upon an ongoing project at the MICROBS lab at EPFL towards de
 \subsection{Contributions}
 \lhead{Introduction - Contributions}
 
+.....
+
 
 \subsection{Outline}
 \lhead{Introduction - Outline}
+This work is structured into first the introduction which outlines the motivation behind the research, the project scope and objectives. Thereafter there is a Hardware section that describes the physical hardware that is used for the subsequent development.
+\newline \newline 
+The main body of the thesis is divided into five core topics corresponding to tasks 1-5 in the project description. These sections generally include methods, implementation and discussion with some also featuring design and further work subsections.
+\newline \newline 
+The first topic is software refactoring, detailing the methodology for the restructuring and development of the software framework. The second section describes how the tip tracking vision system was refactored and integrated with the control system. The third section focuses on how the existing path planning system was integrated with the 2D path following system. The fourth topic explains how the closed-loop tension control for the individual tendons was implemented and discusses its performance. The fifth and final section addresses the final 2D path following system, describing the design, kinematic modeling, implementation, and evaluation of the closed-loop system, along with an interpretation of the results, and discussion on possible further work.
+\newline \newline
+Conclusion wise, there is brief section which summarizes the project and reflects on the insights gained throughout the process.
 
 
 %==============================================================
