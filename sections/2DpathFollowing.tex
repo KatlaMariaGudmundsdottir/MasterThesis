@@ -240,22 +240,92 @@ Although more advanced techniques such as MPC or more advanced form of adaptive 
 For these reasons, LOS offers a better, more practical solution. LOS is relatively straightforward to implement and has good convergence properties in undisturbed environments. It is also very easy to expand upon by adding a integral term, creating a ILOS guidance system that would better handle disturbances. It can even be made adaptive by making the look-ahead distance change based on chosen factors. It is therefore a good starting off point for the system.
 
 \subsubsection{Final LOS Guidance System Design}
-In the final LOS guidance system design we consider a planar path continuously paramaterized
-\(\iota\)
-
-\begin{figure} [H]
-    \centering
-    \includegraphics[width=0.65\linewidth]{images/inkscape/pathframee.png}
-    \caption{Caption}
-    \label{fig:enter-label}
-\end{figure}
+As discussed in the chapter on the final 2D kinematic model of the ribbon the spatial position of the tip of the ribbon is represented by \(P(t) \triangleq [x(t), z(t)]^T\) and its velocity is \(v(t) \triangleq \dot{P}(t)\), stated relative to the stationary global frame. The speed is represented by \(U(t) \triangleq |v(t)| = \sqrt{\dot{x}(t)^2 + \dot{z}(t)^2}\).
+\newline \newline
+The steering is characterized the angular variable \(\theta(t) \triangleq atan2(\dot{x}(t), \dot{z}(t))\) (visualized in figure \ref{fig:theta}. Path following is then ensured by proper assignments to \(\theta(t)\).
+\newline \newline
+In the final LOS guidance system design we consider a planar path continuously parameterized by a scalar variable, \(\epsilon \in \mathbb{R}\), such that the position of a point belonging to the path is represented by \(P_p(\epsilon) \triangleq [x_p(\epsilon), z_p(\epsilon)]^T\). Subsequently we consider an arbitrary path point \(P_p(\epsilon)\) and define a path-fixed reference frame with origin at this point. Then starting with the same orientation as the global stationary frame, a simple elementary rotation can be performed to arrive at this path-fixed frame. This is done by rotating the stationary frame by the path-tangential angle
+\begin{equation}
+    \zeta_p(\epsilon) = atan2(x_p'(\epsilon), z_p'(\epsilon))
+\end{equation}
+about its y-axis, as is visualized in figure \ref{fig:pathframerotation}.
 
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.4\linewidth]{images/inkscape/pathframeRotatione.png}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \caption{Visualization of the rotation from the global stationary frame to the pathframe, characterized by the angle \(\zeta_p\)}
+    \label{fig:pathframerotation}
 \end{figure}
+
+The rotation can also be represented by the rotation matrix
+\begin{equation}
+    R(\zeta_p) = \begin{bmatrix}
+        cos\zeta_p & -sin\zeta_p \\
+        sin \zeta_p & cos\zeta_p 
+    \end{bmatrix}
+\end{equation}
+Such that the error decomposed in the path-fixed reference frame is given by
+\begin{equation}
+    e(t) = R(\zeta_p)^T(P(t) - P_p(\epsilon)
+\end{equation}
+where \(e(t) = [x_e(t), z_e(t)]^T\) represent the \textit{cross-track} and \textit{along-track} errors relative to \(P_p(\epsilon)\). The path following control objective thus becomes
+\begin{equation}
+    \lim_{t\to\infty} e(t) = 0
+\end{equation}
+
+However since \(P_p(\epsilon)\) is chosen by choosing \(\epsilon\) such that the Euclidean distance \(|P(t) - P_p(\epsilon)|\) is minimized, and the path is assumed to continuous, and smooth this corresponds to an orthogonal projection onto the path. Therefore the along-track error \(z_e(t)\) becomes negligible, i.e. \(z_e(t) \approx 0\), and only the cross-track error \(x_e(t)\) is used for guidance. and the control objective can be simplified to 
+\begin{equation}
+    \lim_{t \to \infty} x_e(t) = 0
+\end{equation}
+and this can be achieved by assigning appropriate steering law to \(P(t)\). 
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.65\linewidth]{images/inkscape/pathframee.png}
+    \caption{Visualization of the variables associated with LOS steering for curved paths}
+    \label{fig:pathframe}
+\end{figure}
+For the LOS case the LOS steering angle thus becomes
+\begin{equation}
+    \zeta_r(x_e) \triangleq arctan(-\frac{x_e(t)}{\Delta})
+\end{equation}
+where \(\zeta_r(x_e)\) is a velocity-path relative angle which ensures that the velocity is directed toward a point on the path that is located a \textit{lookahead distance} \(\Delta>0\) ahead of the direct projection of \(P(t)\) onto the path. See figure \ref{fig:pathframe}.
+
+
+The rotation caused by \(\zeta_r(x_e)\) can also be represented by the rotation matrix 
+\begin{equation}
+    R(\zeta_r) = \begin{bmatrix}
+        cos\zeta_r & -sin\zeta_r \\
+        sin \zeta_r & cos\zeta_r
+    \end{bmatrix}
+\end{equation}
+
+Another equally valid representation of the 2D kinematics written out in the section of the final 2D kinematic model thus becomes
+\begin{equation}
+    \begin{bmatrix}
+        \dot{x} \\\dot{z}
+    \end{bmatrix} = R(\zeta_p, \zeta_r)v_z^b = R(\zeta_p)R(\zeta_r)v_z^b
+\end{equation}
+\begin{equation}
+    \begin{bmatrix}
+        \dot{x} \\ \dot{z} 
+    \end{bmatrix} = \begin{bmatrix}
+        -cos\zeta_p sin\zeta_r + sin\zeta_p cos \zeta_r \\
+        -sin\zeta_p sin \zeta_r + cos \zeta_p cos \zeta_r
+    \end{bmatrix} v_z^b
+\end{equation}
+The final 2D steering angle is given by \(\theta_r(x_e)\), for a visualization of this angle see \ref{fig:theta}. Combining this steering angle with the previous equations we get that  \(\theta_r(t) = atan2(\dot{x}_r(t), \dot{z}_r(t)\)  becomes
+\begin{equation}
+    \theta_r(\zeta_p, \zeta_r) = atan2(-cos\zeta_p sin\zeta_r - sin\zeta_p cos \zeta_r, -sin\zeta_p sin \zeta_r + cos\zeta_pcos \zeta_r)
+\end{equation}
+which by geometrical simplification can be transformed to the more traditional formulation of LOS guidance
+\begin{equation}
+    \theta_r(\zeta_p, \zeta_r) = \zeta_p + \zeta_r
+\end{equation}
+
+
+
+
+
 
 
 
