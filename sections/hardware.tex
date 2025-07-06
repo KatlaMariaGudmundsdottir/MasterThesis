@@ -47,10 +47,15 @@ In order to retrieve the position and orientation of the steerable device's tip 
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.5\linewidth]{images/Hardware/insertionStrategy.PNG}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \caption{Picture of the robotic manipulation system as well as the cameras and brain phantom}
+    \label{fig:roboticmanipulationsystem}
 \end{figure}
 
-
+Although in a surgical application this exact setup with cameras would obviously not be feasible, it is similar in concept to the biplane fluoroscopy used in brain surgery, where two X-ray cameras capture real-time images from different angles \cite{weise_intraoperative_2012}. By combining these views, surgeons can understand the 3D position of their instruments. The means that the setup may later be changed to utilize fluoroscopy instead without any major changes to the control system or other hardware.
 
 \subsection{Brain phantom}
+To simulate the behavior of the system in the brain, the steerable device is inserted into and navigates in a brain phantom. The phantom material was selected to match the mechanical properties of brain tissue as closely as possible. Bovine gelatin at 5\% concentration was chosen since it has been shown from experimental comparisons to have a similar response to that of procine brain tissue \cite{singh_comparison_2019}.
+\newline \newline
+The gelatin is cast inside a transparent acrylic display case, which is then placed in a larger acrylic water tank. The surrounding water helps reduce optical refraction. The end of the feeder is the positioned so that it is flush with the gelatin surface. This ensures that the as the steerable device exits the feeder, it immediately enters and moved entirely within the brain phantom. This also heavily reduces the chance of buckling of the steerable device.
+
+
