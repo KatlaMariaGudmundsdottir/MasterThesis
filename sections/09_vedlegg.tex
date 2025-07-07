@@ -2,10 +2,13 @@
 %=================================================================
 %                           Start Document
 %=================================================================
-\section{Vedlegg}
-\lhead{Vedlegg} % section header
+
+\setstretch{1.6}
+\sectiontitle{6}{Appendix}
+\lhead{Appendix} % section header
 
 \appendix
+\lhead{Appendix A: Protocol for Running the Experimental Setup} % section header
 \section{Protocol for Running the Experimental Setup}
 \label{app:protocol}
 
@@ -65,6 +68,90 @@ This appendix outlines the step-by-step procedure required to run the Ribbit sys
     \item Force sensor calibration should be done only after referencing and initial positioning.
     \item Setpoint values can be adjusted depending on the specific experimental conditions.
 \end{itemize}
+
+
+\newpage
+\lhead{Appendix B: Class Descriptions} % section header
+\section{Class Descriptions}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.25\textwidth}|>{\raggedright\arraybackslash}p{0.7\textwidth}|}
+\toprule
+\textbf{Class Name} & \textbf{Description} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{Class Name} & \textbf{Description} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+\bottomrule
+\endlastfoot
+
+\rowcolor{folderblue}
+\multicolumn{2}{|c|}{\textcolor{white}{\textbf{\large  Root Directory (Ribbot/)}}} \\
+\midrule
+\cellcolor{lightblue}\textbf{MainWindow} & Main GUI application window that coordinates all subsystems, handles user interactions, manages timers for sensor data acquisition, graph updates, and logging. Serves as the central hub connecting vision, motor control, and testing components. \\
+\hline
+\cellcolor{lightblue}\textbf{AirCalibrator} & Performs automated air calibration sequences by systematically varying tendon tensions while capturing vision data. Manages the calibration protocol including initial positioning, tension ramping, and data collection. \\
+\hline
+\cellcolor{lightblue}\textbf{Logger} & Handles comprehensive data logging to CSV files including force measurements, PID parameters, stage motion, vision data, and path following metrics. Manages threaded file I/O with queue-based buffering for real-time performance. \\
+\hline
+\cellcolor{lightblue}\textbf{Sensor} & Interfaces with force sensors for tendon tension measurement. Handles ADC conversion, sensor calibration/taring, and force unit conversion using the Sensoray 826 board. \\
+\hline
+\cellcolor{lightblue}\textbf{Tester} & Performs automated testing protocols for device characterization. Manages test sequences including initial insertion, tension application phases, and retraction while coordinating logging and vision recording. \\
+\midrule
+
+\rowcolor{folderblue}
+\multicolumn{2}{|c|}{\textcolor{white}{\textbf{\large  Motor Control (motorcontrol/)}}} \\
+\midrule
+\cellcolor{lightblue}\textbf{LinearStageController} & Controls the PI linear stage for ribbon insertion and retraction. Manages positioning, speed control, acceleration/deceleration profiles, and provides motion status feedback via Qt signals. \\
+\hline
+\cellcolor{lightblue}\textbf{StageMotionEstimator} & Estimates real-time position and velocity of the linear stage based on motion profiles. Calculates acceleration, cruise, and deceleration phases for accurate motion prediction and timing. \\
+\hline
+\cellcolor{lightblue}\textbf{BrushlessMotor} & Controls individual brushless motors for tendon actuation. Manages motor voltage, direction, and velocity-to-voltage conversion using the Sensoray 826 DAQ board interface. \\
+\hline
+\cellcolor{lightblue}\textbf{initBoard} & Initializes and establishes connection to the Sensoray 826 DAQ board for hardware communication with sensors and actuators. \\
+\midrule
+
+\rowcolor{folderblue}
+\multicolumn{2}{|c|}{\textcolor{white}{\textbf{\large  Tendon PID Control (tendonpids/)}}} \\
+\midrule
+\cellcolor{lightblue}\textbf{TendonPIDManager} & Coordinates PID control for all four tendon motors simultaneously. Manages setpoint ramping, synchronizes motor commands, and integrates linear stage feedforward compensation for consistent tension control. \\
+\hline
+\cellcolor{lightblue}\textbf{TendonPID} & Individual PID controller for each tendon with separate pull/release gains. Implements anti-windup, derivative filtering, and adaptive control based on stage motion state. \\
+\midrule
+
+\rowcolor{folderblue}
+\multicolumn{2}{|c|}{\textcolor{white}{\textbf{\large Vision System (vision/)}}} \\
+\midrule
+\cellcolor{lightblue}\textbf{VisionReceiver} & Receives 3D vision data (tip position, pre-tip position, direction vector) from Python vision system via ZeroMQ. Validates data integrity and emits Qt signals for real-time feedback. \\
+\hline
+\cellcolor{lightblue}\textbf{VisionSender} & Sends commands to the vision system for video recording control and frame capture during calibration sequences. Uses ZeroMQ for reliable communication with Python vision interface. \\
+\midrule
+
+\rowcolor{folderblue}
+\multicolumn{2}{|c|}{\textcolor{white}{\textbf{\large  Path Following (pathfollowing/)}}} \\
+\midrule
+\cellcolor{lightblue}\textbf{PathFollower} & Implements closed-loop path following control combining feedforward and feedback components. Orchestrates vision-based guidance, curvature control, and tendon tension commands for trajectory tracking. \\
+\hline
+\cellcolor{lightblue}\textbf{FeedbackController} & PID controller for path following that converts pitch angle errors to curvature commands. Features asymmetric gains for left/right steering and integral anti-windup mechanisms. \\
+\hline
+\cellcolor{lightblue}\textbf{LineOfSight} & Computes line-of-sight guidance angles and waypoint tracking for path following. Calculates cross-track error and reference heading angles based on current position and desired trajectory. \\
+\hline
+\cellcolor{lightblue}\textbf{PathProcessing} & Processes CSV path files containing curvature and length data to generate discrete waypoints for trajectory following. Handles both straight and curved path segments with configurable step sizes. \\
+\hline
+\cellcolor{lightblue}\textbf{PitchConverter} & Converts 3D direction vectors from vision system to pitch angles for steering control. Includes smoothing filters to reduce noise in angle measurements. \\
+\hline
+\cellcolor{lightblue}\textbf{RibbonAdapter} & Adapts generic curvature commands to ribbon-specific actuation parameters. Implements calibrated mapping between desired curvature and required tendon tension differences. \\
+\hline
+\cellcolor{lightblue}\textbf{TensionConverter} & Converts differential actuation commands to individual tendon tension setpoints. Ensures minimum tension levels and handles tension limits for safe operation. \\
+\hline
+\cellcolor{lightblue}\textbf{FeedforwardCalculator} & Calculates feedforward control signals based on path curvature to improve tracking performance. Generates tension commands that anticipate required steering forces along the trajectory. \\
+
+\end{longtable}
 
 
 %=================================================================
