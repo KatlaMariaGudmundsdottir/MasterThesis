@@ -45,8 +45,8 @@ An analysis of the original codebase revealed that the main issue was the low co
 \subsubsection{Restructuring Methodology}
 Based on the architectural guidelines described in the theory section, a revised design was developed. The design emphasizes smaller highly cohesive classes and separation of concerns by defining minimal, well-documented interfaces between modules and isolating hardware-dependent functionality, for different types of application level logic. The existing code was refactored to fit into this structure and unnecessary functionality was removed. Existing errors in the code were also remedied. Thereafter new code was written into the the modules in order to expand the functionality of the system.
 
-\lhead{Software Refactoring - Implementation} % section header
-\subsection{Implementation}
+\lhead{Software Refactoring - Results} % section header
+\subsection{Results}
 
 \subsubsection{Modularization}
 The code was restructured into well defined classes, each responsible for a specific task. These classes were further grouped into folders, these folders are very briefly described in the table below. However a description however of all the classes can be found in the appendix. 
@@ -71,46 +71,49 @@ Path Following & Trajectory planning and guidance algorithms including line-of-s
 \end{tabular}
 \end{table}
 
-\subsubsection{Threading}
-The entire system follows and event-driven architecture using Qt's signal-slot mechanisms wherever possible. This reduces the need for extensive multithreading as modules do not block threads for long periods. Instead most classes react to signals or timers. Some components, such as sensor data acquisition and closed-loop tension control, operate on fixed update intervals using timers. Others, like the path-following controller are triggered by receiving a new vision measurement.
-\newline \newline
-To support real-time performance and responsiveness, multithreading was introduced where strictly necessary. Only components that demonstrated clear performance bottlenecks or responsiveness issues were moved to separate threads. The following components run in dedicated threads:
-\begin{itemize}
-    \item \textbf{Logging thread}: Records sensor and control data without blocking the main loop.
-    \item \textbf{Motion estimation thread}: Continuously estimates stage speed at a high frequency while the linear stage is running for use in feedforward for the closed loop tension control.
-    \item \textbf{Vision receiver thread}: Continuously listens for incoming vision data and receives and parses it.
-\end{itemize}
-A simple figure visualizing these threads and the signals sent between them can be seen in figure
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.5\linewidth]{}
-    \caption{Caption}
-    \label{fig:enter-label}
-\end{figure}
-
-
-\subsection{Results}
+\subsubsection{Architecture}
+A visualization of the resulting architecture after refactoring can be seen in figure \ref{fig:architecture}. As shown, the system in now organized into modular, loosely coupled components with clear responsibilities. The architecture is also layered, with lower-level modules (such as hardware control and above that tendonpids) forming the foundation for higher-level logic (such as path following).
 
 \begin{figure} [H]
 	\centering
-	\includegraphics[width=\linewidth]{images/Software documentation/architecture3.png}
+	\includegraphics[width=1.1\linewidth]{images/Software documentation/architecture3.png}
 	\caption{Final control code base architecture after refactoring}
 	\label{fig:architecture}
 \end{figure}
 
 
 
-\todo{figure of new architecture!}
-\todo{figure of threads!}
+
+\subsubsection{Threading}
+The entire system follows and event-driven architecture using Qt's signal-slot mechanisms wherever possible. This reduces the need for extensive multithreading as modules do not block threads for long periods. Instead most classes react to signals or timers. Some components, such as sensor data acquisition and closed-loop tension control, operate on fixed update intervals using timers. Others, like the path-following controller are triggered by receiving a new vision measurement.
+\begin{figure} [h]
+    \centering
+    \includegraphics[width=0.95\linewidth]{images/Software documentation/threads.png}
+    \caption{Visualization of communicaion between the 4 threads of the control system}
+    \label{fig:threads}
+\end{figure}
+To support real-time performance and responsiveness, multithreading was introduced where strictly necessary. Only components that demonstrated clear performance bottlenecks or responsiveness issues were moved to separate threads. The components run in dedicated threads outside of the main thread are described in the following table. Addittionally a simple figure visualizing of the threads and the signals sent between them can be seen in figure \ref{fig:threads}
+
+\begin{table}[htbp]
+\centering
+\caption{Threading Architecture Description}
+\begin{tabular}{p{0.3\textwidth}p{0.65\textwidth}}
+\toprule
+\textbf{Thread} & \textbf{Description} \\
+\midrule
+Logging Thread & Records sensor and control data without blocking the main loop. \\
+\addlinespace
+Motion Estimation Thread & Continuously estimates stage speed at a high frequency while the linear stage is running for use in feedforward for the closed loop tension control. \\
+\addlinespace
+Vision Receiver Thread & Continuously listens for incoming vision data and receives and parses it. \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 
 
-\subsubsection{Sensor}
-The \texttt{sensor} class was restructured to encapsulate all low-level configuration and data handling required for each individual sensor. Upon initialization, it configures the ADC to sample at the correct timeslot, sets the analog input gain, and synchronizes data acquisition with a dedicated counter using external trigger modes. This ensures that each sensor samples consistently and at the intended \SI{1}{\kilo\hertz} rate. The class also handles voltage-to-force conversion using sensor-specific calibration constants, allowing for flexible reuse across different sensors with varying sensitivities. The readout function returns both the converted voltage and the corresponding timestamp, ensuring the measurements are correctly time-aligned with the control loop. By modularizing the sensor interface in this way, the implementation became more maintainable, reusable, and easier to debug during both development and calibration.
 
-\subsubsection{PI controller}
-The feedback controller runs on a timer loop synchronized with the sensor update rate. It is structured to remain modular and extendable, with clearly defined interfaces for input (force readings and setpoints) and output (motor commands), enabling easy replacement or augmentation with more advanced controllers (e.g., adaptive or model-based) in future work.
+
 
 \subsection{Discussion}
 
@@ -125,6 +128,14 @@ By relying on Qt’s signal-slot mechanism, the system maintains responsive beha
 
 This approach allows the system to meet its real-time requirements while maintaining simplicity and modularity in both structure and execution flow.
 
+
+The architectural refactoring successfully addressed the limitations of the original monolithic codebase, resulting in significant improvements in software quality and system performance.
+The modularization effort created a well-structured codebase with clear separation of concerns. Each module now has a single, well-defined responsibility, making the code significantly more maintainable and extensible. The logical folder organization provides intuitive navigation and reduces code coupling while increasing cohesion.
+The event-driven architecture using Qt's signal-slot mechanism eliminated blocking operations in the main thread, resulting in a responsive user interface. The selective use of multithreading for performance-critical components ensured real-time requirements were met without unnecessary complexity. The main control loop now maintains consistent timing with sensor data acquisition, motion estimation, and vision processing running independently.
+The dedicated threading architecture enables each subsystem to operate at its optimal frequency. The motion estimation thread achieves high-frequency updates for accurate feedforward control, while the vision receiver thread ensures continuous data flow. The logging thread prevents data recording from impacting control loop timing, maintaining system determinism.
+The modular design facilitates easy integration of new components through standardized interfaces. This allows component replacement or enhancement without affecting other system parts. The separation of concerns improved system stability by isolating component failures and preventing cascading effects. These architectural improvements provided a solid foundation for implementing advanced control algorithms while maintaining code clarity and development efficiency.
+
+Each module exposes a minimal interface, making it easier to test, maintain, and reuse individual parts of the system.
 
 
 

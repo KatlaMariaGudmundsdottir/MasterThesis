@@ -4,3 +4,9 @@ In order to make the ribbon follow a path the tendon tensions must be continuall
 In the most simple LOS implementation for the 2D ribbon path following 
 
 Therea re two major stage of navigation: insertion of the device into the phantom and advancement inside the gel \cite{noseda_flat_2024}. 
+
+\subsubsection{Sensor}
+The \texttt{sensor} class was restructured to encapsulate all low-level configuration and data handling required for each individual sensor. Upon initialization, it configures the ADC to sample at the correct timeslot, sets the analog input gain, and synchronizes data acquisition with a dedicated counter using external trigger modes. This ensures that each sensor samples consistently and at the intended \SI{1}{\kilo\hertz} rate. The class also handles voltage-to-force conversion using sensor-specific calibration constants, allowing for flexible reuse across different sensors with varying sensitivities. The readout function returns both the converted voltage and the corresponding timestamp, ensuring the measurements are correctly time-aligned with the control loop. By modularizing the sensor interface in this way, the implementation became more maintainable, reusable, and easier to debug during both development and calibration.
+
+\subsubsection{PI controller}
+The feedback controller runs on a timer loop synchronized with the sensor update rate. It is structured to remain modular and extendable, with clearly defined interfaces for input (force readings and setpoints) and output (motor commands), enabling easy replacement or augmentation with more advanced controllers (e.g., adaptive or model-based) in future work.
