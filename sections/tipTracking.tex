@@ -75,33 +75,38 @@ To further reduce latency, ZeroMQ was configured to use UDP instead of TCP in or
 \subsection{Results}
 
 \subsubsection{Final Refactored Vision System}
+The final refactored system consists of five primary modules as shown in figure \ref{fig:visioncode}, each with clearly defined responsibilities. A description of each class can and a sequence diagram that illustrates the real-time processing flow can also be found in the appendix.
 
-\todo{talk about modularization of the vision code?}
-
-The vision system captures video from two synchronized cameras, detecting the position of the tip and a point just above \todo{put in exact distance}  the tip by using a YOLO onject detection model. The three-dimensional coordinates of these points are then computed using triangulation. A normalized direction vector is then computed based on these points. The coordinates, along with a normalized vector are formatted into a structure message which is then processed and sent by the communication class. A sequence digram of how the refactored code does this can be seen in figure
-
-\begin{figure}
+\begin{figure} [H]
     \centering
-    \includegraphics[width=1.1\linewidth]{images/vision/pythonSequencediag.png}
-    \caption{Sequence diagram of Python Tip detection code}
-    \label{fig:seqpython}
+    \includegraphics[width=\linewidth]{images/Software documentation/visionmodules.png}
+    \caption{Modular architecture of the refactored vision system}
+    \label{fig:visioncode}
 \end{figure}
+
+The vision system captures synchronized video streams from the Basler cameras at 10FPS.  The detection pipeline developed by Lorenzo employs reference frame computation, morphological operations for noise reduction and iterative thinning algorithms to extract the centerline. This allows it to detect the tip position and reference point approximately 1mm proximal to the tip.A normalized direction vector is then computed based on these points. The coordinates, along with a normalized vector are formatted into a structure message which is then processed and sent by the communication class.
+
+\todo{figure of skeletonized ribbon?}
+
+In terms of threading the \texttt{ObjectDetector} and \texttt{CameraSystem} classes implement dedicated worker threads with queue-based frame management. Frame queues use a latest-frame-only strategy to maintain low latency in case of varying processing time.
 
 \todo{figure of vision system detections}
 
+
 \subsubsection{Communication protocol between Python and Qt}
-ZeroMQ supports multiple serialization formats, and JSON was chosen for its simplicity and ease of debugging. Each transmitted message consists of a timestamp, the 3D coordinates of the detected tip and pre-tip, and the direction vector. Before transmission, the coordinates undergo a transformation from the coordinate frame utilized in the vision system to the control system's coordinate system. 
-
-The communication system between the vision system (the python tip tracking algorithm) and the controller follows a publisher-subscriber (pub/sub) model. The vision system, acting as the publisher, continuously streams the tip, pre-tip positions and the directional vector data to the ZeroMQ socket bound to the address specified in the \texttt{config} file. There any subscriber on the network can receive updates. 
-
-In the C++/Qt control system a dedicated thread is implemented as a zeroMQ subsciber and listens for vision dta updates. This prevents blocking the main control loop. Once a new message is received the extrancted tip and pre-tip coordinates and direction vector are used as feedback in the control system. This architecture ensures that the control system is always working with the most recent available data while minimizing delays.
-
+In the final communication system the Python based vision system acts as a pyblisher and continuously streams messages containing the timestamp, the two-dimensional coordinates of the detected tip and a point 1mm procimal to the tip, as well as a normalized direction vector. 
 \begin{figure} [H]
     \centering
     \includegraphics[width=1.1\linewidth]{images/Software documentation/visionSequencediag.png}
     \caption{Sequence diagram of the communication between python vision system and Qt control system}
     \label{fig:seqComm}
 \end{figure}
+
+
+\newline \newline 
+Before transimission, the coordinates are transformed from the vision system's coordinate frame to that used by the control system. The Qt based control system includes a dedicated subscriber thread that listens for updates on the specified ZeroMQ address. Once a message is received, the thread extracts the relevant information and updats the path following system with the latest tip and direction data. 
+\newline \newline
+In addition to receiving data, the control system can also send commands to the vision module using a separate ZeroMQ DEALER socket. Three commands are currently implemented: \texttt{save\_video}, which start recording video frames with an optional session tag; \texttt{stop\_recording}, which terminates the ongoing recording session; and \texttt{save\_frame}, which captures and stores a single image frame annotated with metadata. These commands allow the contro system to trigger frame captures and recordings in sync with contrl events and to annotate them with relevant metadata. This enables accurate offline analysis and alignment of visual and control data logs.
 
 
 
