@@ -40,9 +40,19 @@ As mentioned, there was an existing Python-based 3D tip tracking algorithm. Howe
 Additionally to make it suitable for real-time feedback it was necessary to thread the system. This is due to the original systems reliance on YOLO \cite{redmon_you_2016}, a deep learning-based object detection algorithm, which is too computationally heavy for non-threaded real-time use.
 
 \subsubsection{Switching to 2D Tip Tracking}
-As the project progressed it became clear that even after refactoring the 3D vision system did not perform well enough for real-time vision. This was due to the slow computationally heavy step of running each frame through YOLO which limited the system significantly, even after assigning it to its own thread. There were also other issues, such as the system having been trained previously on images where the ribbon was moving in a agarose brain phantom. Since 5\% bovine gelatin was used in this project instead due to it having closer mechanical properties to the brain, the detection turned out to be quite poor. This led to jumps in the systems estimation of the tip position and direction and, at times, no detection at all.
-\todo{picture of ribbon in agarose vs gelatin?}
-\newline \newline
+As the project progressed it became clear that even after refactoring the 3D vision system did not perform well enough for real-time vision. This was due to the slow computationally heavy step of running each frame through YOLO which limited the system significantly, even after assigning it to its own thread. There were also other issues, such as the system having been trained previously on images where the ribbon was moving in a agarose brain phantom. Since 5\% bovine gelatin was used in this project instead due to it having closer mechanical properties to the brain, the detection turned out to be quite poor. As can be seen in figure \ref{fig:side_by_side} the images in the different mediums differ significantly. This led to jumps in the systems estimation of the tip position and direction and, at times, no detection at all.
+\begin{figure}[htbp]
+    \centering
+    \begin{subcaptionbox}{Picture of ribbon in agarose annotated with tip and pre-tip detections\label{fig:left}}[0.45\linewidth]
+        {\includegraphics[width=\linewidth]{images/RibbonPicture/agarose2.PNG}}
+    \end{subcaptionbox}
+    \hspace{0.05\linewidth}
+    \begin{subcaptionbox}{Picture of ribbon in vobine gelatin\label{fig:right}}[0.45\linewidth]
+        {\includegraphics[width=\linewidth]{images/RibbonPicture/gelatin2.PNG}}
+    \end{subcaptionbox}
+    \caption{Pictures of the ribbon being inserted into an agarose brain phanton (a) vs a bovine gelatin brain phantom (b)}
+    \label{fig:side_by_side}
+\end{figure}
 Therefore Lorenzo Noseda developed a 2D version that instead utilizes classical thresholding and skeletonization of the images and thereby extracts the 2D tip position and direction. A new version of the refactored real-time 3D tip tracking was thereafter developed for this thesis, where the 2D tip detection was inserted into the structure instead of the 3D YOLO detection.
 
 \subsubsection{Choosing a Communication Protocol}
@@ -101,9 +111,6 @@ In the final communication system the Python based vision system acts as a pybli
     \caption{Sequence diagram of the communication between python vision system and Qt control system}
     \label{fig:seqComm}
 \end{figure}
-
-
-\newline \newline 
 Before transimission, the coordinates are transformed from the vision system's coordinate frame to that used by the control system. The Qt based control system includes a dedicated subscriber thread that listens for updates on the specified ZeroMQ address. Once a message is received, the thread extracts the relevant information and updats the path following system with the latest tip and direction data. 
 \newline \newline
 In addition to receiving data, the control system can also send commands to the vision module using a separate ZeroMQ DEALER socket. Three commands are currently implemented: \texttt{save\_video}, which start recording video frames with an optional session tag; \texttt{stop\_recording}, which terminates the ongoing recording session; and \texttt{save\_frame}, which captures and stores a single image frame annotated with metadata. These commands allow the contro system to trigger frame captures and recordings in sync with contrl events and to annotate them with relevant metadata. This enables accurate offline analysis and alignment of visual and control data logs.
@@ -111,14 +118,17 @@ In addition to receiving data, the control system can also send commands to the 
 
 
 \subsection{Discussion}
-This implementation is scalable in the sense that if you want to implement on-line path calculation based on the vision data it can simply also just subscribe to the vision data.
+\subsubsection{Scalability}
+The final implementation of the Vision system and its communication protocol to Qt is both scalable and flexible. Thanks to the publish/subscribe architecture, additional independent systems such as a possible future real-time path planner can simply subscribe to the vision data stream in the same way Qt does.
 
-The fact that any subscriber on vision network can receive updates. This ensures flexivbility and allows additional components such as logging or monitoring tools or real time path planning to be added as subscribers in the future.
+\subsubsection{Jumpy Detections}
+While the current 2D vision system is functional for real-time feedback, the detections it produces are often visibly jumpy from frame to frame. This temporal inconsistency poses significant issues for closed loop control of the angle of the tip. This noise was therefore reduced by aggressive smoothing to avoid erratic control responses. Details on this can be found in the pitch converter implementation section in the pathfollowing chapter. \todo{figure showing the jumpy directional vector}
+\newline \newline 
+Although this is a significant issue in the pathfollowing implementation it may not be worth extensive optimization for this iteration of the system. In future systems using fluoroscopy, the tip will likely be marked, potentially with contrast agent \todo{Ask Lorenzo what he would do to mark it again}, which would improve its visibility and result in more stable and consistent detections over time.
 
-By leveraging low-latency, connectionless messaging, the system ensures that the most recent vision data is always available without the delays associated with TCP retransmissions or message queues. The pub/sub model further enhances scalability, allowing additional subscribers to be integrated as needed.
+\subsubsection{Future extension to 3D Tip Tracking}
+Although the current implementation uses a 2D vision pipeline, the system is fully prepared for expansion to 3D. The code is modularized such that this should be a straight forward process. As long as the output message contains the necessary position in the expected format, the communication to Qt would not have to be changed significantly either.
 
-By structuring the vision and control system communication in this manner, the system achieves fast, robust, and scalable data exchange while maintaining the flexibility to accommodate future improvements. The combination of efficient data serialization, independent processing threads, and network optimizations ensures that the communication layer operates at a high frequency without compromising the responsiveness of the control system. 
+\subsection{Conclusion}
+The refactored vision system and communication framework provide the necessary tip detection for real-time path following. It is modular, low-latency, and easily extendable for future developments, including 3D vision, improved tracking methods and additional data subscribers.
 
- This combination—ZeroMQ over UDP—provides a fast, scalable, and maintainable communication layer ideal for streaming real-time vision data to the control system.
-
-\todo{rewrite whole subsubsection}
