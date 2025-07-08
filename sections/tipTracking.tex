@@ -1,17 +1,49 @@
 \setstretch{1.6}
 \sectiontitle{6}{Tip Tracking Integration}
 \lhead{Tip Tracking Integration} % section header
+As mentioned in the project context an algorithm for capturing and processing the images from the cameras has already been developed by a previous student. This code was written in python and its aim was to deduce the position and direction of the tip of the ribbon while it moves in the brain phantom effectively "Tip Tracking". However, this code had not been developed for real-time use, but rather post-processing of videos.  Therefore it had to be refactored and somewhat rewritten for this project. Since the tip data acquired by this algorithm was then to be used in the closed-loop path following control system, it was also necessary to develop a method of sharing this data in real time with the C++ control system developed in Qt. This section therefore details the refactoring and communication implementation necessary to allow for live vision-feedback.
 
+\lhead{Tip Tracking Integration - Theory} % section header
 \subsection{Theory}
+\subsubsection{Types of Communication Protocols}
+There are several ways to establish a communication layer that allows real-time data transfer between two programs, often referred to as InterProcess Communication (IPC). Below is a brief analysis of each relevant method.
 
 
+\paragraph*{File-based communication}
+The simplest solution in terms of implementation is file based communication. One system would for each data point write to a file which is subsequently read by the receiving system. This requires the receiving system to continuously monitor the file for updates introducing latency that is further exacerbated by file system access times and disk I/O overhead. 
+
+In terms of fault tolerance, file-based communication has the benefit of data persisting even if a process crashes, however it is not designed for high-frequency updates \cite{gray_interprocess_2003}. Race conditions can occur if both the vision and control systems attempt to access the file simultaneously. Locking mechanisms can mitigate this, but at the cost of further increasing latency \cite{gray_interprocess_2003}. 
+
+\paragraph*{Shared memory}
+A significantly faster method is shared memory. Shared memory allows multiple processes to access a common memory space, enables rapid data exchange without the overhead of disk I/O or network communication. However it also introduces concurrency and data consistency challenges. \cite{gray_interprocess_2003}
+
+Since multiple processes may attempt to read and write simultaneously, synchronization mechanisms such as mutexes or semaphores are required to prevent race conditions \cite{burns_real-time_2009}. This adds complexity and thus makes the system less robust and maintainable. Another challenge is that shared memory must be allocated and managed by both processes. This makes it difficult to integrate across different programming languages where data structures may not be inherently compatible. Thus the complexity, lack of language compatibility and make it impractical for this application.
+
+\paragraph*{Named Pipes}
+Named Pipes allow data to be transmitted between processes on the same machine asynchronously by operating as a first-in, first-out (FIFO) buffer \cite{gray_interprocess_2003}. Compared to file-based communication, pipes offer lower latency and are more efficient for continuous data streaming \cite{gray_interprocess_2003}. The main limitation in the context of this project is that they are constrained to a single machine. This limits the scalability since in a later revision one might want to run the vision and control systems on separate machines in a distributed setup. 
+
+\paragraph*{Message queues}
+Message queues provide structured message passing using a queue-based architecture \cite{kleppmann_designing_2017}. Systems such as RabbitMQ and Apache Kafka provide reliable message delivery making message queues highly fault tolerant. However they also introduce latency due to message buffering and broker management \cite{kleppmann_designing_2017}. Meaning that they may not be ideal for real-time application such as this onw where low-latency streaming is of a higher priority than durable message queueing.
+
+\paragraph*{Networking (Sockets and ZeroMQ)}
+Networking-based communication, using either raw sockets or messaging libraries such as ZeroMQ \cite{noauthor_zeromq_nodate}, provides a flexible and scalable solution \cite{lauener_how_2018}. Raw sockets allow direct communication over a network using protocols such as TCP or UDP. TCP ensures reliable message delivery but introduces additional latency. The choice between TCP and UDP is a trade-off between reliability and variability of delays: UDP does not perform flow control and does not retransmit lost packets, so it avoids some of the resasons for variable network delays \cite{kleppmann_designing_2017}. Unlike TCP, UDP does not guarantee message delivery, meaning that packets may be lost.  However, for real-time control, receiving the most recent data is more important than ensuring that every packet arrives. Since the vision data is used as feedback, occasional packet loss is preferable to the latency caused by TCP retransmissions. 
+
+ZeroMQ provides a higher-level abstraction for message-based communication and offers built-in support for various messaging patterns, including publish/subscribe (pub/sub), request/reply and push/pull \cite{lauener_how_2018}. The pub/sub model is especially advantageous system since it enables efficient real-time streaming of data to multiple subscribers with minimal overhead. 
+
+
+\lhead{Tip Tracking Integration - Methods} % section header
 \subsection{Methods}
 
-\subsubsection{Refactoring of Vision Code}
-As mentioned in the project context there was an existing 3D tip tracking algorithm that was developed in python specifically for this project. However it was  implemented in a single file and had not been tested for real-time scenarios, and since the code used YOLO (\todo{explanation of yolo})for object detection it was necessary to not only restructure the code for real-time use, but also to thread it to minimize latencies that would otherwise have rendered the code unusable for real-time feedback, communication between this python code and the controlsystem in Qt also had to be implemented, therefore it was decided that a full restructuring of the code was necessary
-\todo{insert figure of old vision structure}. The code was refactored using the some code quality criteria as discussed in the theory section on refactoring. 
+\subsubsection{Vision Code Refactoring Methodology}
+As mentioned, there was an existing Python-based 3D tip tracking algorithm. However, it was implemented in a single file and hand not been developed for real-time use. Meaning that it did not have the structure necessary to allow for simple alterations that would transform it into real-time detection system. The system also needed additional implemented functionality such as image capturing and communication to the Qt-based control system. Therefore it was decided that the code had to be restructured and altered. This was done according to the same code quality criteria discussed in the theory section in the Software Refactoring chapter.
 \newline \newline
-As the project progressed it became clear that the 3D vision system using 
+Additionally to make it suitable for real-time feedback it was necessary to thread the system. This is due to the original systems reliance on YOLO \cite{redmon_you_2016}, a deep learning-based object detection algorithm, which is too computationally heavy for non-threaded real-time use.
+
+\subsubsection{Switching to 2D Tip Tracking}
+As the project progressed it became clear that even after refactoring the 3D vision system did not perform well enough for real-time vision. This was due to the slow computationally heavy step of running each frame through YOLO which limited the system significantly, even after assigning it to its own thread. There were also other issues, such as the system having been trained previously on images where the ribbon was moving in a agarose brain phantom. Since 5\% bovine gelatin was used in this project instead due to it having closer mechanical properties to the brain, the detection turned out to be quite poor. This led to jumps in the systems estimation of the tip position and direction and, at times, no detection at all.
+\todo{picture of ribbon in agarose vs gelatin?}
+\newline \newline
+Therefore Lorenzo Noseda developed a 2D version that instead utilizes classical thresholding and skeletonization of the images and thereby extracts the 2D tip position and direction. A new version of the refactored real-time 3D tip tracking was thereafter developed for this thesis, where the 2D tip detection was inserted into the structure instead of the 3D YOLO detection.
 
 \subsubsection{Choosing a Communication Protocol}
 In order to establish a robust connection between the already existing Python-based tip tracking system and the C++/Qt-based control system several ways of establishing an interface were evaluated. In order to choose the most suited communication method a set of evaluation criteria based on their suitability for real-time dat streaming \textit{Designing Data Intensive Applications} \cite{kleppmann_designing_2017} were used.
@@ -20,46 +52,33 @@ In order to establish a robust connection between the already existing Python-ba
     \item \textbf{Latency and Real-Time Performance} - The ability to provide low-latency communication suitable for real-time control.
     \item \textbf{Fault Tolerance and Robustness} - Resiliance to failures such as dropped messages or system crashes.
     \item \textbf{Communication Model} - Suitability for push-based (streaming) or pull.based (request-response) communication
-    \item \textbf{Message Format and Serialization} - Efficiency of data encoding and compatibility across languages.
     \item \textbf{Ordering and Consitency Guarantees} - The ability to ensure data arrives in the correct order.
     \item \textbf{Scalability} - The capability to accommodate future system expansions, such as integrating communication with a potential real-time path planning algorithm.
     \item \textbf{Ease of Implementation and Maintenance} - Complexity of integrating the communication method into the existing system.
 \end{enumerate}
 
-There are several ways to establish a communication layer that allows real-time data transfer between two programs. This includes ...
 
 
-\subsubsection{Tip tracking interface evaluation}
-Several methods exist for enabling real-time inter-process communication or networking-based communication. The choice of method impacts the systems performance, reliability and scalability. The primary methods considered for data exchange between the vision system and the control system are
 
-\paragraph*{File-based communication}
-The simplest solution in terms of implementation is file based communication. The vision system would for each detection write to a file which is subsequently read by the control system. This requires the control system to continuously monitor the file for updates introducing latency that is further exacerbated by file system access times and disk I/O overhead. 
+\lhead{Tip Tracking Integration - Design} % section header
+\subsection{Design}
+\subsubsection{Choice of Communication Protocol}
+The methods discussed in the theory section were all considered for enabling communication. File-based communication was ruled out early due to high latency and non-robust performance. Shared memory and named pipes offer better performance but had limited scalability and poor cross-platform/language compatibility. Message queues were also excluded as their high reliability and fault tolerance came at the cost of increased latency.
+\newline \newline 
+ZeroMQ was selected because it offers a lightweight, high-performance messaging layer with built in support for communication patterns such as publish/subscribe and request/reply \cite{lauener_how_2018}. The pub/sub pattern is especially useful here, as it allows the vision system to breadcast real-time data to the control system. This may also be easily expanded later one so that for example a real-time path planning algorithm can simply subscribe to the vision data.
+\newline \newline
+To further reduce latency, ZeroMQ was configured to use UDP instead of TCP in order to avoid delays caused by retransmission. Making it more suitible for real-time feedback where receiving the most recent data is the priority. 
 
-In terms of fault tolerance, file-based communication has the benefit of data persisting even if a process crashes, however it is not designed for high-frequency updates. Race conditions can occur if both the vision and control systems attempt to access the file simultaneously. Locking mechanisms can mitigate this, but at the cost of further increasing latency. This method was therefore concluded to not be a viable solution due to its high latency and inefficient real-time performance.
 
-\paragraph*{Shared memory}
-A significantly faster method is shared memory. Shared memory allows multiple processes to access a common memory space, enables rapid data exchange without the overhead of disk I/O or network communication. However it also introduces concurrency and data consistency challenges. 
 
-Since multiple processes may attempt to read and write simultaneously, synchronization mechanisms such as mutexes or semaphores are required to prevent race conditions. This adds complexity and thus makes the system less robust and maintainable. Another challenge is that shared memory must be allocated and managed by both processes. This makes it difficult to integrate across different programming languages where data structures may not be inherently compatible. Thus the complexity, lack of language compatibility and make it impractical for this application.
+\lhead{Tip Tracking Integration - Results} % section header
+\subsection{Results}
 
-\paragraph*{Named Pipes}
-Named Pipes allow data to be transmitted between processes on the same machine asynchronously by operating as a first-in, first-out (FIFO) buffer. Compared to file-based communication, pipes offer lower latency and are more efficient for continuous data streaming. The main limitation in the context of this project is that they are constrained to a single machine. This limits the scalability since in a later revision one might want to run the vision and control systems on separate machines in a distributed setup. 
-
-\paragraph*{Message queues}
-Message queues provide structured message passing using a queue-based architecture \todo{cite}. Systems such as RabbitMQ and Apache Kafka provide reliable message delivery making message queues highly fault tolerant. However they also introduce latency due to message buffering and broker management \todo{cite}. Meaning that they may not be ideal for real-time application such as this onw where low-latency streaming is of a higher priority than durable message queueing.
-
-\paragraph*{Networking (Sockets and ZeroMQ)}
-Networking-based communication, using either raw sockets or messaging libraries such as ZeroMQ \todo{source}, provides a flexible and scalable solution. Raw sockets allow direct communication over a network using protocols such as TCP or UDP. TCP ensures reliable message delivery but introduces additional latency. The choice between TCP and UDP is a trade-off between reliability and variability of delays: UDP does not perform flow control and does not retransmit lost packets, so it avoids some of the resasons for variable network delays \cite{kleppmann_designing_2017}. Unlike TCP, UDP does not guarantee message delivery, meaning that packets may be lost.  However, for real-time control, receiving the most recent data is more important than ensuring that every packet arrives. Since the vision data is used as feedback, occasional packet loss is preferable to the latency caused by TCP retransmissions. 
-
-ZeroMQ provides a higher-level abstraction for message-based communication and offers built-in support for various messaging patterns, including pusblish/subscrive (pub/sub), request/reply and push/pull \todo{source}. The pub/sub model is especially advantageous system since it enables efficient real-te streaming of the vision data to multiple subscribers with minimal overhead. So that future scaling including a real-time path planning algorithm can simply subscribe to the vision data. By using ZeroMQ over UDP the system will have fast, scalable and maintainable communication. Based on this evaluation ZeroMQ over UDP was selected as the communication method for real-time data transfer between the vision and control systems
-
-\subsection{Implementation}
-
-\subsection{Final Refactored Vision System}
+\subsubsection{Final Refactored Vision System}
 
 \todo{talk about modularization of the vision code?}
 
-The vision system that was implemented by a previous student \todo{attatch documentation for the syste?} captures video from two synchronized cameras, detecting the position of the tip and a point just above \todo{put in exact distance}  the tip by using a YOLO onject detection model. The three-dimensional coordinates of these points are then computed using triangulation. A normalized direction vector is then computed based on these points. The coordinates, along with a normalized vector are formatted into a structure message which is then processed and sent by the communication class. A sequence digram of how the refactored code does this can be seen in figure
+The vision system captures video from two synchronized cameras, detecting the position of the tip and a point just above \todo{put in exact distance}  the tip by using a YOLO onject detection model. The three-dimensional coordinates of these points are then computed using triangulation. A normalized direction vector is then computed based on these points. The coordinates, along with a normalized vector are formatted into a structure message which is then processed and sent by the communication class. A sequence digram of how the refactored code does this can be seen in figure
 
 \begin{figure}
     \centering
@@ -70,9 +89,7 @@ The vision system that was implemented by a previous student \todo{attatch docum
 
 \todo{figure of vision system detections}
 
-\subsection{Communication Implementation between Python and Qt}
-
-
+\subsubsection{Communication protocol between Python and Qt}
 ZeroMQ supports multiple serialization formats, and JSON was chosen for its simplicity and ease of debugging. Each transmitted message consists of a timestamp, the 3D coordinates of the detected tip and pre-tip, and the direction vector. Before transmission, the coordinates undergo a transformation from the coordinate frame utilized in the vision system to the control system's coordinate system. 
 
 The communication system between the vision system (the python tip tracking algorithm) and the controller follows a publisher-subscriber (pub/sub) model. The vision system, acting as the publisher, continuously streams the tip, pre-tip positions and the directional vector data to the ZeroMQ socket bound to the address specified in the \texttt{config} file. There any subscriber on the network can receive updates. 
@@ -86,8 +103,7 @@ In the C++/Qt control system a dedicated thread is implemented as a zeroMQ subsc
     \label{fig:seqComm}
 \end{figure}
 
-\subsection{Results}
-\todo{speed quantification?}
+
 
 \subsection{Discussion}
 This implementation is scalable in the sense that if you want to implement on-line path calculation based on the vision data it can simply also just subscribe to the vision data.
@@ -98,5 +114,6 @@ By leveraging low-latency, connectionless messaging, the system ensures that the
 
 By structuring the vision and control system communication in this manner, the system achieves fast, robust, and scalable data exchange while maintaining the flexibility to accommodate future improvements. The combination of efficient data serialization, independent processing threads, and network optimizations ensures that the communication layer operates at a high frequency without compromising the responsiveness of the control system. 
 
+ This combination—ZeroMQ over UDP—provides a fast, scalable, and maintainable communication layer ideal for streaming real-time vision data to the control system.
 
 \todo{rewrite whole subsubsection}

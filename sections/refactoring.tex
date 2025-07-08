@@ -111,35 +111,46 @@ Vision Receiver Thread & Continuously listens for incoming vision data and recei
 \end{table}
 
 \subsubsection{Graphical-User-Interface}
+The graphical user interface (GUI) was completely redesigned to improve user-friendliness and expand the functionality of the system. Figure \ref{fig:oldgui} shows the old GUI before refactoring, while figure \ref{fig:gui} shows the new, refactored GUI.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{images/gui/oldGUI.PNG}
+    \caption{Old GUI before refactoring}
+    \label{fig:oldgui}
+\end{figure}
+The original GUI had limited and sometimes unstable functionality with unclear labels. It was not entirely obvious what each button did, meaning that users were required to analyze the underlying code in order to use it effectively.
+\newline \newline 
+The redesigned GUI aims to have clearer organization with more functionality by grouping control according to their purpose. At the top left, the section labeled \texttt{Linear Stage} contains all controls realted to movement and speed settings for the linear actuator. To the right of this section are controls for logging and recording, which also include the ability to specify the desired target folder for the data.
+\newline \newline
+Below these sections to the left there are series of tabs that provide access to distinct operational modes, including basic PID control, air calibration, path following and testing routines. The tab section on the right-hand side however relates to the setting of parameters. Users can use these tabs to configure the pull and release PID gains for each motor, as well as set parameters specific to the path-following algorithm.
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{images/gui/main.PNG}
+    \caption{New GUI, after refactoring}
+    \label{fig:gui}
+\end{figure}
+The \texttt{Force Sensors} section presents a live view of the forces applied to each tendon, alongside a calibration button for each sensor. Finally at the bottom, a real-time plot visualizes the force data from all tendons and adjusts its y-axis scale to fit the range of values displayed.
 
 
-
-
-
-
-
-
+\lhead{Software Refactoring - Discussion} % section header
 \subsection{Discussion}
+\subsubsection{Modularization}
+The refactoring process transformed the structure, functionality and usability of the code base. While the original codebase was function, it lacked the clarity and separation of concerns required for long-term maintainability and further development. The changes made during the thesis directly addressed these shortcomings, resulting in a system that is both robust and significantly easier to work with.
+\newline \newline
+By redistributing the responsibilities from the centralized \texttt{MainWindow} class to more focused modules the code base was made to better align with the principles of high cohesion and low coupling. The architectural redesign also established a clearer layering of the system, separating low-level hardware control from higher-level application logic. This layering allows each subsustem to evolve independently and simplifies debugging. The introduction of more clearly defined interfaces further improved the seperation and readability.
 
+\subsubsection{Threading}
+The use of Qt's signal-slot, mechanism highly reduced the risk of blocking operations in threads ensured a responsive user interface. The threading that was introduced also made sure that the system would be responsive and there would not be unnecessary delays in the control loop that would lead to instability. Importantly, threads were only added where clear performance issues were observed, rather than assigning a thread to evey major module by default.
+\newline \newline 
+Some might argue that large modules that run their own closed loop control such as \texttt{PathFollowing} or \texttt{TendonPIDs} should also run in their own threads. While this could become relevant if the functionality expands significantly, current testing showed no significant lag or blocking from these modules since they operate at ficed timer-based intervals and do not require a lot of processing upon each call. It was therefore evaluated that adding additional threads would only introduce unnecessary complexity.
 
-By combining lightweight threads for parallel execution with queued, thread-safe communication via Qt signals/slots, real-time systems can achieve both responsiveness and reliability without falling prey to classic concurrency pitfalls.
+\subsubsection{Graphical-User-Interface}
+The redesigned GUI significantly improved usability by replacing the limited, developer-focused interface with a clearer, functionally organized layout. This should make the system more intuitive and accessible to new users.
 
-Only components that demonstrated clear performance bottlenecks or responsiveness issues were moved to separate threads. This approach minimizes complexity while still meeting the system’s real-time requirements. Communication between modules is kept minimal and modular, consistent with the design principles of low coupling, high cohesion, and information hiding discussed in the theory section.
-
-The result is a system that is easier to maintain, extend, and test, with clear module boundaries and a simplified control flow.
-
-By relying on Qt’s signal-slot mechanism, the system maintains responsive behavior while keeping communication between modules clean, thread-safe, and loosely coupled.
-
-This approach allows the system to meet its real-time requirements while maintaining simplicity and modularity in both structure and execution flow.
-
-
-The architectural refactoring successfully addressed the limitations of the original monolithic codebase, resulting in significant improvements in software quality and system performance.
-The modularization effort created a well-structured codebase with clear separation of concerns. Each module now has a single, well-defined responsibility, making the code significantly more maintainable and extensible. The logical folder organization provides intuitive navigation and reduces code coupling while increasing cohesion.
-The event-driven architecture using Qt's signal-slot mechanism eliminated blocking operations in the main thread, resulting in a responsive user interface. The selective use of multithreading for performance-critical components ensured real-time requirements were met without unnecessary complexity. The main control loop now maintains consistent timing with sensor data acquisition, motion estimation, and vision processing running independently.
-The dedicated threading architecture enables each subsystem to operate at its optimal frequency. The motion estimation thread achieves high-frequency updates for accurate feedforward control, while the vision receiver thread ensures continuous data flow. The logging thread prevents data recording from impacting control loop timing, maintaining system determinism.
-The modular design facilitates easy integration of new components through standardized interfaces. This allows component replacement or enhancement without affecting other system parts. The separation of concerns improved system stability by isolating component failures and preventing cascading effects. These architectural improvements provided a solid foundation for implementing advanced control algorithms while maintaining code clarity and development efficiency.
-
-Each module exposes a minimal interface, making it easier to test, maintain, and reuse individual parts of the system.
+\lhead{Software Refactoring - Conclusion} % section header
+\subsection{Conclusion}
+Overall, the refactoring does more than clean up the code, it enables the development of new features, improves the reliability and readability and aligns the software with best practices for real-time, modular design. The resulting architecture is scalable, maintainable and better suited for future development
 
 
 
