@@ -322,8 +322,10 @@ which by geometrical simplification can be transformed to the more traditional f
     \theta_r(\zeta_p, \zeta_r) = \zeta_p + \zeta_r
 \end{equation}
 
+\subsubsection{Final ILOS Guidance System Design}
 
 
+\subsubsection{Choice of Ribbon Adaptation Method}
 
 
 
@@ -350,19 +352,11 @@ In order to orchestrate the cooperation between these classes and their dataflow
     \label{fig:pathfolloingmodules}
 \end{figure}
 
+\subsubsection{Ribbon Adaptation Method}
 
 
-\paragraph*{Guidance}
-The \texttt{Guidance} class implements the core navigation algorithm that generates heading references based on the current tip position and the desired path.
 
-\paragraph*{title}
-
-\subsubsection{Pitch autopilot}
-In order for the ribbon to follow the path, the tip must continuously align wiht the desired pitch angle \(\theta_{ref}\) computed by the lOS algorithm. However,the physical system is controlled through tendon tensions which induce bending at the distal tip. Therefore, an intermedediate control layer, a pitch autopilot, must be implemented to convert heading references into actuator-level commands.
-\newline \newline
-It was decided 
-
-\subsubsection{Tuning}
+\subsubsection{Tuning Methodology}
 the Ziegler-Nichols relay method assumes that:
 
 The system has an oscillatory behavior when switching between min and max control effort.
@@ -377,12 +371,15 @@ There’s no natural restoring force — no spring-back, no drift back — so th
 
 This is more like trying to autotune a position-controlled robot arm joint where gravity and friction dominate and the joint stays where it's told.
 
-\subsubsection{Validation of Path Following}
+\subsubsection{Validation Plan for Path-Following}
 
 
 \subsection{Implementation}
 
-\subsubsection{Guidance System (LOS)}
+\subsubsection{Guidance System (LOS and ILOS)}
+\paragraph*{Line-Of-Sight (LOS)}
+
+\paragraph*{Integral-Line-Of-Sight (ILOS)}
 
 
 \subsubsection{Pitch autopilot}
@@ -458,8 +455,24 @@ The \texttt{TensionConverter} class implements this conversion through the \text
 
 \subsection{Results}
 
+\subsubsection{Ribbon Adaptation}
+
+\subsubsection{Pitch Tracking}
+
+\subsubsection{LOS Path-Following}
+
+\subsubsection{ILOS Path-Following}
+
 
 \subsection{Discussion}
+
+\subsubsection{Ribbon Adaptation}
+
+\subsubsection{Pitch Tracking}
+
+\subsubsection{LOS Path-Following}
+
+\subsubsection{ILOS Path-Following}
 
 This pre-computation approach ensures that the control system can anticipate required actuations rather than simply reacting to tracking errors. 
 
@@ -469,9 +482,17 @@ This ribbon-specific adaptation ensures that the curvature commands produce the 
 
 
 
+\subsection{Future Development}
+
 \subsubsection{Pitch conversion improvements}
 
-\subsub
+\subsubsection{Adaptation based on Path Curvature}
+
+\subsubsection{Further Ribbon Adaptation}
+
+
+\subsubsection{Extension to 3D PathFollowing}
+
 
 
 

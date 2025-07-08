@@ -10,3 +10,14 @@ The \texttt{sensor} class was restructured to encapsulate all low-level configur
 
 \subsubsection{PI controller}
 The feedback controller runs on a timer loop synchronized with the sensor update rate. It is structured to remain modular and extendable, with clearly defined interfaces for input (force readings and setpoints) and output (motor commands), enabling easy replacement or augmentation with more advanced controllers (e.g., adaptive or model-based) in future work.
+
+
+\paragraph*{Guidance}
+The \texttt{Guidance} class implements the core navigation algorithm that generates heading references based on the current tip position and the desired path.
+
+\paragraph*{title}
+
+\subsubsection{Pitch autopilot}
+In order for the ribbon to follow the path, the tip must continuously align wiht the desired pitch angle \(\theta_{ref}\) computed by the lOS algorithm. However,the physical system is controlled through tendon tensions which induce bending at the distal tip. Therefore, an intermedediate control layer, a pitch autopilot, must be implemented to convert heading references into actuator-level commands.
+\newline \newline
+It was decided 

@@ -41,7 +41,7 @@ In order to control the steering of the device each tendon is attached to fishin
 The feeder which moves the entire device up and down consists of a linear stage \todo{insert type and precision} onto which the "flaps" at the proximal end of the backbone are attached. This linear stage allows for the setting of speed, acceleration and has "move to position" functionality which are all used in order to achieve the desired kinematics of the system.
 
 
-\subsection{Vision}
+\subsection{Camera System}
 In order to retrieve the position and orientation of the steerable device's tip the system is equipped with two Basler cameras (model a2A2448-23gcBAS) which offer 5MP resolution at up to 23 frames/sec and can by driven via the Basler Pylon SDK. Each camera is also paired with a basler lense (model C23-0824-5M-P). The vision system is implemented in a similar way to \cite{dalvand_high_2016} where two cameras are mounted on the structure so that they have clear views of the manipulation scene. This setup paired with a stereo calibration process and an image processing triangulation algorithm is capable of providing 2D and 3D tip positions, which allows visual feedback for the closed-loop path following.
 
 \begin{figure} [H]

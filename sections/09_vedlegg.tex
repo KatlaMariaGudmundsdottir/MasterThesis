@@ -71,8 +71,8 @@ This appendix outlines the step-by-step procedure required to run the Ribbit sys
 
 
 \newpage
-\lhead{Appendix B: Class Descriptions} % section header
-\section{Class Descriptions}
+\lhead{Appendix B: Qt Control System Class Descriptions} % section header
+\section{Qt Control System Class Descriptions}
 \begin{longtable}{|>{\raggedright\arraybackslash}p{0.25\textwidth}|>{\raggedright\arraybackslash}p{0.7\textwidth}|}
 \toprule
 \textbf{Class Name} & \textbf{Description} \\
@@ -152,8 +152,52 @@ This appendix outlines the step-by-step procedure required to run the Ribbit sys
 \cellcolor{lightblue}\textbf{FeedforwardCalculator} & Calculates feedforward control signals based on path curvature to improve tracking performance. Generates tension commands that anticipate required steering forces along the trajectory. \\
 
 \end{longtable}
+\newpage
 
 
+\lhead{Appendix C: Vision System Class Descriptions} % section header
+\section{Vision System Class Descriptions}
+\begin{longtable}{|>{\raggedright\arraybackslash}p{0.25\textwidth}|>{\raggedright\arraybackslash}p{0.7\textwidth}|}
+\toprule
+\textbf{Class Name} & \textbf{Description} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{Class Name} & \textbf{Description} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+\bottomrule
+\endlastfoot
+
+\rowcolor{folderblue}
+\multicolumn{2}{|c|}{\textcolor{white}{\textbf{\large  Core Vision System}}} \\
+\midrule
+\cellcolor{lightblue}\textbf{CameraSystem} & Manages dual Basler camera interface using PyPylon library. Handles camera configuration including exposure settings and frame rate control. Implements threaded frame acquisition with latest-frame-only strategy and provides synchronized stereo image pairs through a thread-safe queue system. \\
+\hline
+\cellcolor{lightblue}\textbf{ObjectDetector} & Core detection engine that processes stereo camera frames to identify catheter tip and orientation. Uses background subtraction, morphological operations, and skeleton-based analysis to extract tip position, pre-tip reference point, and direction vector. Implements threaded processing for real-time performance. \\
+\hline
+\cellcolor{lightblue}\textbf{Undistorter} & Handles camera calibration and image rectification using stored calibration parameters. Performs lens distortion correction, maintains adaptive reference frame through temporal averaging, and manages coordinate transformations between camera and world coordinate systems. \\
+\midrule
+
+\rowcolor{folderblue}
+\multicolumn{2}{|c|}{\textcolor{white}{\textbf{\large  Communication \& Control}}} \\
+\midrule
+\cellcolor{lightblue}\textbf{Communicator} & Manages bidirectional ZeroMQ communication with the Qt control system. Publishes real-time 3D position and orientation data via PUB socket, receives control commands via ROUTER socket, and handles coordinate system transformations from pixels to millimeters for control system integration. \\
+\midrule
+
+\rowcolor{folderblue}
+\multicolumn{2}{|c|}{\textcolor{white}{\textbf{\large  Data Recording \& Visualization}}} \\
+\midrule
+\cellcolor{lightblue}\textbf{Recorder} & Comprehensive recording system for experimental data capture. Manages synchronized dual-camera video recording, handles on-demand frame capture for calibration sequences, organizes data into timestamped session folders, and provides MP4 video output with configurable compression settings. \\
+\hline
+\cellcolor{lightblue}\textbf{Visualizer} & Real-time visualization system for system monitoring and debugging. Displays live camera feeds, overlays detection results including tip position and orientation arrows, provides side-by-side comparison views, and manages OpenCV window operations for user interface. \\
+
+\end{longtable}
 %=================================================================
 %                           End Document
 %=================================================================
