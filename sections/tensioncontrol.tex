@@ -53,24 +53,37 @@ The \texttt{LinearStageController} class was implemented by adapting C++ example
 \subsection{Implementation}
 \todo{Write small section syaing this section details the implementation of the boxes in the closed loop tendon tension control}
 
-\subsubsection{Brushless motor speed controller}
+\subsubsection{Brushless Motor Speed Controller}
 Since the inner controller is a speed controller and could not be recongifured for torque control, the solution was to instead optimize the system around its limitations. This involved selecting the best parameters for the inner speed controller to ensure that it responds as quickly as possible. This turned out to be the values provided by Faulhaber as default values. 
 
-\subsubsection{Linear stage speed feedforward}
+\subsubsection{Linear Stage sSpeed Feedforward}
 Since the backbone of the ribbon is moved up and down by the linear stage and the tendons are attached at the distal most point of the ribbon, it makes sense to have a feedforward to the tendon tension control that ensures that the tension remains relatively stable during movement by reeling the appropriate amount in or out based on the speed of the linear stage. This also ensures that the feedback doesn't need to do all the heavy lifting of compensating for the movement.
 
-\paragraph*{Implementing a new linear stage}
-Before moving on to implementing the feedforward element that depends on the speed of the linear stage, the new linear stage had to be implemented. In a previous iteration of the system, the one that was implemented when this thesis was started the setup utilized a servomotor along with with a "feeder" that consisted of two counterrotating barrels, essentially serving as a conveyor belt. However there were significant issues with this mostly due to slipping, something that was exacerbated when the system was miniaturized. It was therefore replaced by a linear stage that is directly attached to the top of the ribbon, removing the slipping issue of the conveyor belt solution.
+\paragraph*{Motivation for Implementing a New Linear Stage}
+Before moving on to implementing the feedforward element that depends on the speed of the linear stage, the new linear stage had to be implemented. In a previous iteration of the system, the one that was implemented when this thesis was started the setup utilized a servomotor along with with a "feeder" that consisted of two counterrotating barrels, essentially serving as a conveyor belt (figure \ref{fig:conveyor}). However there were significant issues with this mostly due to slipping, something that was exacerbated when the system was miniaturized. It was therefore replaced by a linear stage that is directly attached to the top of the ribbon, removing the slipping issue of the conveyor belt solution. A comparison of the two insertion strategies can be seen in figure \ref{fig:insertionStrategies}
 
+\begin{figure}[H]
+    \centering
+    \begin{subcaptionbox}{Old insertion strategy using a "conveyor belt" \label{fig:conveyor}}[0.45\linewidth]
+        {\includegraphics[width=\linewidth]{images/Hardware/oldInsertion.PNG}}
+    \end{subcaptionbox}
+    \hspace{0.05\linewidth}
+    \begin{subcaptionbox}{New insertion strategy using a linear stage\label{fig:right}}[0.35\linewidth]
+        {\includegraphics[width=\linewidth]{images/Hardware/insertion.PNG}}
+    \end{subcaptionbox}
+    \caption{Comparison of the previous hardware iteration (a) and the new hardware (b) assembled during this thesis}
+    \label{fig:insertionStrategies}
+\end{figure}
+
+
+\paragraph*{Software Implementation of Linear Stage Control}
+Two new classes were written to integrate this linear stage into the system software: \texttt{LinearStageController} and \texttt{StageMotionEstimator}. The \texttt{LinearStageController} is responsible for low-level communication with the linear stage hardware using the Physik Instrumente (PI) GCS2 API. It handles connection management, servo enable/disable commands, movement to absolute or relative positions, referencing, and safety checks for position limits and servo state. Timers are used to periodically check whether movement or referencing operations are complete, allowing the controller to emit signals when movement finishes or when feedback estimation should start or stop.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{images/linearstage/architecture.png}
     \caption{Caption}
     \label{fig:enter-label}
 \end{figure}
-
-Two new classes were written to integrate this linear stage into the system software: \texttt{LinearStageController} and \texttt{StageMotionEstimator}. The \texttt{LinearStageController} is responsible for low-level communication with the linear stage hardware using the Physik Instrumente (PI) GCS2 API. It handles connection management, servo enable/disable commands, movement to absolute or relative positions, referencing, and safety checks for position limits and servo state. Timers are used to periodically check whether movement or referencing operations are complete, allowing the controller to emit signals when movement finishes or when feedback estimation should start or stop.
-\newline \newline
 Methods were also written for querying the current state of the system, such as position, speed, and servo status, and the class integrates with Qt’s signal-slot mechanism to communicate with other parts of the application. All interaction with the hardware is guarded by connection and safety checks to prevent invalid operations, and the use of QTimers ensures that blocking calls are avoided, keeping the GUI responsive. This modular and robust design makes the class easy and safe to  reuse and extend in future control experiments involving the linear stage.
 
 
