@@ -1,15 +1,9 @@
 \setstretch{1.6}
 \sectiontitle{6}{Closed-Loop Tension Control}
 \lhead{Closed-Loop Tension Control} % section header
+As mentioned in the project context a form of closed-loop control of the tendon tensions was already implemented before the start of this thesis. However that implementation had several issues, including large steady state error up to 100mN, and difficulty in tracking the setpoints when while the linear stage was moving, thereby creating large over- and undershoots in tension. There were also issues in the implementations of the GUI leading the setpoint to be set to zero before being set to the desired setpoint decided by the user. Therefore it was necessary to rework this closed-loop tension control in order to ensure that later navigational control that would be implemented on top of this inner closed loop would function in the intended manner.
 
-
-Why tension control?
-
-As mentioned in the project context a form of closed-loop control of the tendon tensions was already implemented before the start of this thesis. However that implementation had several issues, including large steady state error up to 100mN, and difficulty in tracking the setpoints when while the linear stage was moving, thereby creating large over- and undershoots in tension. There were also issues in the implementations of the GUI leading the setpoint to be set to zero before being set to the desired setpoint decided by the user. Therefore it was neceassary to rework this closed-loop tension control in order to ensure that later navigational control that would be implemented on top of this inner closed loop would function in the intended manner.  \todo{maybe a sentance on what were to happen if the inner most closed loop didnt work as intented}
-
-
-\subsection{Theory}
-
+\lhead{Closed-Loop Tension Control - Methods} % section header
 \subsection{Methods}
 
 \subsubsection{System Analysis and Initial PID Tuning}
@@ -18,19 +12,32 @@ In order to rework the closed-loop tension control it was necessary to first fig
 After analyzing the behavior, the simplest solution was tested first, namely retuning the PIDs, especially turning up the integral term. However returning in an attempt to remove the standard deviation led to instability, oscillations and large errors particularly when the ribbon was being moved up and down by the linear stage. Therefore the entire PID implementation had to be re-evaluated and re-worked. 
 
 \subsubsection{Identifying Control Limitations due to Hardware}
-The observed instability and failure to reach tension setpoints was ultimately traced back to limitations due to utilizing a speed controller for the Faulhaber brushless motors used in the system. A speed controller is not well suited for tension control since it is designed to regulate the motor's roational speed, not the force (torque) it applies to maintain tension. In tension control, the goal is to keep a consistent pulling force on the tendon, which depends directly on the motor's torque. However, a speed controller adjusts torque only as a means to achieve a target speed. Thus in this original implementation where a closed-loop PID tension control is implemented on top of a speed controller, the layered control structure causes significant issues. The outer tension control loop adjusts the target speed command based on the tension error, but it takes time for the inner speed controller to reach this set target, in the mean time the outerloop will continue to recalculate the speed setpoints. So if the outerloop sets a speed target that the inner loop can not reach before the outerloop calculates a new setpoint, there is in-effect a significant delay that leads to instability. 
+The observed instability and failure to reach tension setpoints was ultimately traced back to limitations due to utilizing a speed controller for the Faulhaber brushless motors used in the system. A speed controller is not well suited for tension control since it is designed to regulate the motor's rotational speed, not the force (torque) it applies to maintain tension. In tension control, the goal is to keep a consistent pulling force on the tendon, which depends directly on the motor's torque. However, a speed controller adjusts torque only as a means to achieve a target speed. Thus in this original implementation where a closed-loop PID tension control is implemented on top of a speed controller, the layered control structure causes significant issues. The outer tension control loop adjusts the target speed command based on the tension error, but it takes time for the inner speed controller to reach this set target, in the mean time the outerloop will continue to recalculate the speed setpoints. So if the outerloop sets a speed target that the inner loop can not reach before the outerloop calculates a new setpoint, there is in-effect a significant delay that leads to instability. 
 \newline \newline
-Because of these dynamics, an attempt was made to change the parameters of the speed controller by turning down the proportional term of the internal speed PID controller and setting the integral term to zero. The aim was to gain more direct control of the motor's behavior by reducing the internal controller's influence, allowing the outer tension loop to act more like a direct torque controller. However it turned out to be impossible to turn of the integral term, apparently the internal PID parameters, particularly the integral term, are auto-configured and to a degree locked by the Motion Manager software and not inteded for external adjustment. Since it was impossible to turn of the integral term this led to undesired behavior, such as when the motor is given a constant setpoint it will begin by reeling in the string as intended, but then will slowly stop reeling in and eventually start turning the other way, releasing the string until it is manually stopped. 
+Because of these dynamics, an attempt was made to change the parameters of the speed controller by turning down the proportional term of the internal speed PID controller and setting the integral term to zero. The aim was to gain more direct control of the motor's behavior by reducing the internal controller's influence, allowing the outer tension loop to act more like a direct torque controller. However it turned out to be impossible to turn of the integral term, apparently the internal PID parameters, particularly the integral term, are auto-configured and to a degree locked by the Motion Manager software and not intended for external adjustment. Since it was impossible to turn of the integral term this led to undesired behavior, such as when the motor is given a constant setpoint it will begin by reeling in the string as intended, but then will slowly stop reeling in and eventually start turning the other way, releasing the string until it is manually stopped. 
 
 \subsubsection{System Adaptation Strategy}
 Since the inner controller could not be reconfigured for torque control, the solution was to adapt the system to work within these constraints. This means making the inner loop, i.e. the motor's internal speed control, as fast and responsive as possible. In contrast, everything else around the motor has to be slowed down to avoid overwhelming the inner loop.
 \newline \newline
-This also requires making the brushless motors as responsive as possible, so to that end the deadzone for the motors was found and compensated for in the implementation of the controller. Additionally it was important to ensure that the sensor were as accurate as possible, thus they were recalibrated and tare-ing functionality was implemented.
+This also requires making the brush less motors as responsive as possible, so to that end the deadzone for the motors was found and compensated for in the implementation of the controller. Additionally it was important to ensure that the sensor were as accurate as possible, thus they were recalibrated and tare-ing functionality was implemented.
 
 \subsubsection{Integration of New Hardware}
-However before doing so the setup was due for another iteration. There were several issues with the initial implementation of the system including unreliable reeling in of the tendons, the backbone would also often slip leading to unreliable behavior. Therefore the mechanical setup redesigned by Lorenzo and the motor responsible for moving the backbone of the tendon up and down was replaced. A part of the process was there for assemble the setup once the components arrived, redo the wiring and write a control class in C++ for the new linear stage and integrate it with the rest of the codebase.
+However before doing so the setup was due for another iteration. There were several issues with the initial implementation of the system including unreliable reeling in of the tendons, the backbone would also often slip leading to unreliable behavior. Therefore the mechanical setup redesigned by Lorenzo and the motor responsible for moving the backbone of the tendon up and down was replaced. It was therefore a necessary step to assemble the setup once the components arrived, redo the wiring and write a control class in C++ for the new linear stage and integrate it with the rest of the codebase.
 \newline \newline
 The \texttt{LinearStageController} class was implemented by adapting C++ example code and API documentation provided by Physik Instrumente. Core functionality such as motion control, servo handling, and data recording was tailored to the system using these references. The code was modularized, integrated with Qt’s signal-slot system, and extended with safety checks and asynchronous timers to meet real-time control and estimation requirements.
+
+\begin{figure}[H]
+    \centering
+    \begin{subcaptionbox}{\label{fig:left}}[0.45\linewidth]
+        {\includegraphics[width=\linewidth]{images/waypoints/smallcurves2.png}}
+    \end{subcaptionbox}
+    \hspace{0.05\linewidth}
+    \begin{subcaptionbox}{\label{fig:right}}[0.45\linewidth]
+        {\includegraphics[width=\linewidth]{images/waypoints/Figure_1.png}}
+    \end{subcaptionbox}
+    \caption{Two example paths (a) and (b) generated by the path planning algorithm. The plotted points are the interpolated waypoints generated by the \texttt{PathProcessing} module.}
+    \label{fig:waypoints}
+\end{figure}
 
 \todo{Put in a picture of the old setup}
 
@@ -39,7 +46,7 @@ The \texttt{LinearStageController} class was implemented by adapting C++ example
 \todo{write section}
 
 
-
+\lhead{Closed-Loop Tension Control - Implementation} % section header
 \subsection{Implementation}
 
 
