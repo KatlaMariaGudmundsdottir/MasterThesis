@@ -100,8 +100,6 @@ The vision system captures synchronized video streams from the Basler cameras at
 
 In terms of threading the \texttt{ObjectDetector} and \texttt{CameraSystem} classes implement dedicated worker threads with queue-based frame management. Frame queues use a latest-frame-only strategy to maintain low latency in case of varying processing time.
 
-\todo{figure of vision system detections}
-
 
 \subsubsection{Communication protocol between Python and Qt}
 In the final communication system the Python based vision system acts as a pyblisher and continuously streams messages containing the timestamp, the two-dimensional coordinates of the detected tip and a point 1mm procimal to the tip, as well as a normalized direction vector. 
