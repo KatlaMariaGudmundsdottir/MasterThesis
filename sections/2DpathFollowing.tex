@@ -318,18 +318,39 @@ which by geometrical simplification can be transformed to the more traditional f
 \end{equation}
 
 \subsubsection{Final ILOS Guidance System Design}
+The final design of the Integral-Line-Of-Sight (ILOS) guidance system builds heavily on the previously described LOS system, with the addition of an integral term when calculating the steering angle \(\zeta_r(x_e)\) (see figure \ref{fig:ilos}. Thus the new ILOS steering angle becomes:
+\begin{equation}
+    \zeta_{r}(x_e) \triangleq arctan(-\frac{x_e(t) +K_i\int x_e}{\Delta})
+\end{equation}
+Where \(K_i\) is a tunable design parameter, and integral gain and \(\Delta\) has the same interpretation as in the case of traditional LOS
 
-\begin{figure}
+\begin{figure} [H]
     \centering
-    \includegraphics[width=0.5\linewidth]{ilos}
+    \includegraphics[width=0.65\linewidth]{images/inkscape/ILOS.png}
+    \caption{Visualization of the variables associated with ILOS steering for curved paths}
+    \label{fig:ilos}
+\end{figure}
+
+And the reference steering angle \(\theta_r\) with ILOS guidance remains identical to equation (28), only with a re-definition of the \(\zeta_r\) parameter.
+
+\subsubsection{Ribbon Adaptation Motivation and Design}
+A later addition to the design of the system is the ribbon adaptation module. This module is responsible for taking in the desired curvature and giving out the appropriate desired actuation \(u_d\) this specific device needs to apply in order to achieve this specific curvature. 
+\paragraph*{Motivation}
+During testing it was observed that devices would display markedly different dynamics, but also the same device could behave differently from day to day. This is likely due to wear in terms of gelatin from the brain phantom entering the ribbon and hardening inside the tendon tracks leading to higher internal friction over time (more on this in the results section). Although a small difference from day to day was also observed when the device had not been inserted into gelatin. An example of observed difference can be seen by comparing figur
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/ribbonadapter/Ribbonfit_2025-06-27_18-55-42-scaledaxis.png}
     \caption{Caption}
     \label{fig:enter-label}
 \end{figure}
 
-\subsubsection{Choice of Ribbon Adaptation Method}
-
-
-
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/ribbonadapter/ribbonfit_2025-06-30_09-22-24.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
 
 
 
@@ -356,6 +377,8 @@ In order to orchestrate the cooperation between these classes and their dataflow
 \end{figure}
 
 \subsubsection{Ribbon Adaptation Method}
+
+
 
 \begin{figure}[H]
     \centering
@@ -480,19 +503,7 @@ The \texttt{TensionConverter} class implements this conversion through the \text
 \subsubsection{Ribbon Adaptation}
 
 \paragraph*{Observed Difference in Ribbon Dynamics}
-\begin{figure} [H]
-    \centering
-    \includegraphics[width=0.9\linewidth]{images/ribbonadapter/Ribbonfit_2025-06-27_18-55-42-scaledaxis.png}
-    \caption{Caption}
-    \label{fig:enter-label}
-\end{figure}
 
-\begin{figure} [H]
-    \centering
-    \includegraphics[width=0.9\linewidth]{images/ribbonadapter/ribbonfit_2025-06-30_09-22-24.png}
-    \caption{Caption}
-    \label{fig:enter-label}
-\end{figure}
 
 \paragraph*{Observed Hysteresis}
 \begin{figure} [H]
