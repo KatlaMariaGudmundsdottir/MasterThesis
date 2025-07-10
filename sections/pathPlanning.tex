@@ -49,7 +49,7 @@ The results of the path planning integration can be seen in figure \ref{fig:wayp
 \end{figure}
 
 \subsection{Discussion}
-\subsubsection{Limitation of the Current Path Planning Algorithm}
+\subsubsection{Path Planning Algorithm Limitations}
 
 A key limitation , of the the current path planning algorithm when applied to this system is that the planned paths consist of discrete constant-curvature segments joined together, resulting in a continuous path, but non-differentiable curvature profile. In reality, the ribbon cannot switch instantly between different curvatures, these transistions require phsycial deformation over time and space. 
 As such, future iterations of the path planning could aim to generate continuously differentiable curvature profiles, potentially by incorporating splines or smooth curvature interpolation methods \cite{fossen_handbook_2011}. This would better reflect the true kinematic capabilities of the device and enable more physically plausible and smoother motions.
