@@ -1,12 +1,11 @@
 \setstretch{1.6}
 \sectiontitle{6}{2D Path following}
 \lhead{2D Path following} % section header
-\todo{write intro}
-
+This final section describes how 2D path following was achieved for the ribbon robot. It begins with an analysis of some relevant literature, it then describes the kinematic model designed for the system and the control systems final design, which combines all the components described in previous chapters as well as a closed-loop pitch control and Integral-Line-Of-Sight (ILOS) guidance system. The implementation of these two last components is then explained as well as the device-specific adaptation method implemented due to differences in device dynamics. This all finally enables real-time following of preset paths through the brain phantom, the results of which are presented and discussed. The final subchapter then discusses some possible future developments.
 
 \subsection{Background}
 \subsubsection{Kinematic Modeling of Similar Devices}
-Devices with kinematic similarities to the tendon-driven ribbon-shaped device primarily include steerable needles, concentric tube robots, and tendon-drive continuum robots. Each of these devices rely on structural flexibility and and actuation mechanism that creates a curvature or deformation that allows for navigating through soft biological tissues. Hoever none of them are directly applicable.
+Devices with kinematic similarities to the tendon-driven ribbon-shaped device primarily include steerable needles, concentric tube robots, and tendon-drive continuum robots. Each of these devices rely on structural flexibility and and actuation mechanism that creates a curvature or deformation that allows for navigating through soft biological tissues. However none of their models are directly applicable.
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.9\linewidth]{images/steerableNeedles/actuations.png}
@@ -15,22 +14,22 @@ Devices with kinematic similarities to the tendon-driven ribbon-shaped device pr
 \end{figure}
 
 \paragraph*{Magnetic, Pneumatic and Concentric Tube robots}
-Most steerable robotic devices are actuated in a fundementally different manner to the tendon driven ribbon device and must therefore also be steered in a very different way. Magnetic actuation relies on external magnetic fields interacting with embedded magnets \todo{cite}. Pneumatic systems induce curvature by inflating internal chambers which results in a deformation along the entire device  \todo{cite}. Concentric tube robots utilize nested tubes with pre-defined curvatures actuated through relative rotation and translation. Consequently all of these devices kinematics models are not directly transferable to tendon-driven ribbon-shaped devices.
+Most steerable robotic devices are actuated in a fundamentally different manner to the tendon driven ribbon device and must therefore also be steered in a very different way. Magnetic actuation typically relies on external magnetic fields interacting with embedded magnets in the device \cite{petruska_magnetic_2016} \cite{pancaldi_flow_2020}. Pneumatic systems induce curvature by inflating internal chambers which results in a deformation along the entire device  \cite{gopesh_soft_2021}, \cite{luo_novel_2023}. Concentric tube robots utilize nested tubes with pre-defined curvatures actuated through relative rotation and translation \cite{dupont_continuum_2022}, \cite{alfalahi_concentric_2020}. Consequently all of these devices kinematics models are not directly transferable to tendon-driven ribbon-shaped devices.
 
 \paragraph*{Traditional tendon-driven continuum robots}
-Traditional tendon-driven continuum robots differ significantly to the device used here in their modeling despite their similar actuation. This because they deform continuously along their entire length under actuation forces. While in the ribbon device here it deforms primarily at the distal tip due to the interaction between the backbone and the surrounding brain tissue. Therefore existing continuum robot kinematic models, which assume distributed deformation, cannot be directly applied.
+Traditional tendon-driven continuum robots differ significantly to the device used here in their modeling despite their similar actuation. This because they deform continuously along their entire length of a segment under actuation forces. While in the ribbon device here it deforms primarily at the distal tip due to the interaction between the backbone and the surrounding brain tissue. Therefore existing continuum robot kinematic models \cite{chitalia_design_2020} \cite{kato_tendon-driven_2016}, which assume distributed deformation, cannot be directly applied.
 
 \paragraph*{Steerable Needles}
-The device that is by far closest in its steering mechanism are steerable needles, particularly bevel-tip needles. Primarily since steerable needles utilize a deformation at only the tip in order to induce curvature during insertion. This leads to nonholonomic kinematics, meaning the needle's orientation and position are coupled in a way that constrains its possible instantaneous directions of movement i.e. it cannot more laterally without insertion \cite{webster_nonholonomic_2006}. Although steerable needles achieve directional control be rotating the bevel tip or moving segment of the tip as in Secoli et al's work \cite{secoli_adaptive_2016} \cite{secoli_closed-loop_2013}, their steering is still a highly relevant foundation for kinematic models for the tendon-driven ribbon-shaped device.
+The device that is by far closest in its steering mechanism are steerable needles. Primarily since steerable needles utilize a deformation at only the tip in order to induce curvature during insertion which can be achieved in several distinct ways \cite{van_de_berg_design_2015}. This leads to nonholonomic kinematics , meaning the needle's orientation and position are coupled in a way that constrains its possible instantaneous directions of movement i.e. it cannot more laterally without insertion \cite{webster_nonholonomic_2006}. The mechanics have been thoroughly studied for these devices leading to the development of both kinematic and dynamic models \cite{misra_mechanics_2010}. Although steerable needles typically achieve directional control be rotating the bevel tip or moving segment of the tip as in Secoli et al's work \cite{secoli_adaptive_2016} \cite{secoli_closed-loop_2013}, their steering is still a highly relevant foundation for kinematic models for the tendon-driven ribbon-shaped device.
 \newline \newline 
-An effective 2D model was developed by Young Ko et al in \cite{ko_two-dimensional_2010}. The steerable probe is modelled as a planar nonholonomic system, where the curvature at the tip determines the trajectory insertion. This curvature is treated as an input to a unicycle-like kinematic model where the evolution of the probe¨s pose is governed by its insertion velocity and current curvature.
+An effective 2D model was developed by Young Ko et al in \cite{ko_two-dimensional_2010}. The steerable probe is modeled as a planar nonholonomic system, where the curvature at the tip determines the trajectory insertion. This curvature is treated as an input to a unicycle-like kinematic model where the evolution of the probe's pose is governed by its insertion velocity and current curvature.
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.7\linewidth]{images/steerableNeedles/needlefig.png}
     \caption{Four part Steerable needle developed by Secoli et al \cite{secoli_closed-loop_2013}}
     \label{fig:fourpartneedle}
 \end{figure}
-Later Secoli and Rodriguez y Baena developed a 3D version for the same 4-part steerable needle (seen in figure \ref{fig:fourpartneedle}) inspired by underactuated underwater vehicles. The needle's motion is governed by nonholonomic constraints, with insertion along the x-axis and tip steering controlled by programmable offsets between interlocked needle segments. The model defines the needle's orientation using Euler angles (roll, pitch, yaw), with angular velocities about the pitch and yaw axes proportional to the segment offsets. This results in a non-linear, driftless kineamtic system, which they then convert into chained form coordinates for closed-loop feedback control.
+Later Secoli and Rodriguez y Baena developed a 3D version for the same 4-part steerable needle (seen in figure \ref{fig:fourpartneedle}) inspired by underactuated underwater vehicles. The needle's motion is governed by nonholonomic constraints, with insertion along the x-axis and tip steering controlled by programmable offsets between interlocked needle segments. The model defines the needle's orientation using Euler angles (roll, pitch, yaw), with angular velocities about the pitch and yaw axes proportional to the segment offsets. This results in a non-linear, driftless kinematic system, which they then convert into chained form coordinates for closed-loop feedback control.
 
 \begin{figure}
     \centering
@@ -38,36 +37,35 @@ Later Secoli and Rodriguez y Baena developed a 3D version for the same 4-part st
     \caption{Configuration of a bevel tipped needle during steering showing the front and back "wheels" \cite{webster_nonholonomic_2006}}
     \label{fig:bicycle}
 \end{figure}
-A more complex strategy for modeling needle steering is the  model introduced by Webster et al. \cite{webster_nonholonomic_2006}, which treats needle insertion as a constrained control problem similar to a bicycle instead of a unicycle. In bevel-tip needles, the asymmetry at the tip induces lateral forces during insertion naturally creating a curved trajectory where orientation and position are interdependent. For a fixed needle shaft rotation, the model is similar to that of a bicycle with a front wheel angle and a back wheel angle that corresponds to the angle a certain distance from the tip of the needle as is shown in figure \ref{fig:bicycle}.
+A more complex strategy for modeling needle steering is the  model introduced by Webster et al. \cite{webster_nonholonomic_2006}, which treats needle insertion as a constrained control problem similar to a bicycle instead of a unicycle. In bevel-tip needles, the asymmetry at the tip induces lateral forces during insertion naturally creating a curved trajectory where orientation and position are interdependent \cite{misra_mechanics_2010}. For a fixed needle shaft rotation, the model is similar to that of a bicycle with a front wheel angle and a back wheel angle that corresponds to the angle a certain distance from the tip of the needle \cite{webster_nonholonomic_2006} as is shown in figure \ref{fig:bicycle}.
 \newline \newline
-Fallahi et al. extended this model for soft tissue and created a model that accounts for non-constant curvature paths for the needle tip. Since for a tissue that is not stiff relative to the needle, the tissue deformation caused by needle insertion deviates the needle tip position. This model is obtained by replacing the bicycle wheels with omnidirectional wheels tha tmove in two orthogonal direction independently. Such wheels can move sideways, providing a means for modeling the deviations of the needle tip from a constant curvature path. \cite{fallahi_extended_2015}
-
+Fallahi et al. extended this model for soft tissue and created a model that accounts for non-constant curvature paths for the needle tip. Since for a tissue that is not stiff relative to the needle, the tissue deformation caused by needle insertion deviates the needle tip position. This model is obtained by replacing the bicycle wheels with omnidirectional wheels that move in two orthogonal direction independently. Such wheels can move sideways, providing a means for modeling the deviations of the needle tip from a constant curvature path. \cite{fallahi_extended_2015}
 
 
 \subsubsection{Path Following Definition}
 Path following is a  motion control scenario where a “vessel” has to follow a predefined path without any time constraints \cite{caharija_integral_2016}. It thereby differs to trajectory tracking since the path is not parameterized by time, but rather by another useful parameter \cite{hung_review_2023}, such as path length. 
 
-This distinction is important since in the application to brain surgery spatial control is a lot more critical than timing. Also since the system can make smoother corrections and prioritize accuracy over speed when there are no strict time requirements. Path following also allows smoother convergence to the path and can reduce actuator actuator activity, since it avoids the constant adjustments required by time-based tracking (Aguiar and Hespanha 2007).
+This distinction is important since in the application to brain surgery spatial control is a lot more critical than timing. Also since the system can make smoother corrections and prioritize accuracy over speed when there are no strict time requirements. Path following also allows smoother convergence to the path and can reduce actuator actuator activity, since it avoids the constant adjustments required by time-based tracking \cite{aguiar_trajectory-tracking_2007}.
 
 \subsubsection{Marine path-following for ribbon navigation in brain tissue}
-The steering of the tendon-driven ribbon in brain tissue can be modelled to e kinematacally analogous to that of a boat or UAV. In a marine vessel vessel, turning the helm deflects the rudder, inducin a curvature that realigns the hull with the desired path. In the surgical device, pulling on the tendons causes the flexible tip of the probe to bend in a specific direction. This bending changes the direction of the devices motion, in much the same way that a rudder steers a boat. 
+The steering of the tendon-driven ribbon in brain tissue can be modeled to be kinematically analogous to that of a boat or UAV such as in \cite{secoli_adaptive_2016}, \cite{secoli_closed-loop_2013} \cite{ko_closed-loop_2011}. In a marine vessel, turning the helm deflects the rudder, inducing a curvature that realigns the hull with the desired path \cite{borhaug_integral_2008}. In the ribbon device, pulling on the tendons causes the flexible tip of the probe to bend in a specific direction. This bending changes the direction of the devices motion, in much the same way that a rudder steers a boat. 
 \newline \newline 
-Because the bending of the tip of the device directly controls the direction of motion and the relationship between curvature and lateral deviation is governed by the same kinematic principles as in boat steering, the curvature or heading angle computed by marine guiddance laws are directly applicable by converting the heading angle to target bending angle for the device. This target bending angle can then be used to compute the corresponding tendon tensions required to steer the probe along the desired path.
+Because the bending of the tip of the device directly controls the direction of motion and the relationship between curvature and lateral deviation is governed by the same kinematic principles as in boat steering, the curvature or heading angle computed by marine guidance laws are therefore directly applicable by converting the heading angle to target bending angle for the device. This target bending angle can then be used to compute the corresponding tendon tensions required to steer the probe along the desired path.
 \newline \newline 
-Therefore, guidance methods established in marine robotics are well-suited as a foundation for developing the path-following strategy in this application. The following sections therefore provide an overview of the guidance systems popularly employed and developed for marine navigation.
+Therefore, guidance methods established in marine robotics are well-suited as a foundation for developing the path-following strategy in this application. The following sections  provide an overview of the guidance systems popularly employed and developed for marine navigation.
 
-\subsubsection{Types of Guidance systems}
+\subsubsection{Types of Marine Guidance systems}
 Path following can further be divided into two parts: the guidance system and the control system \cite{qi_curve_2022}. Where the guidance system is responsible for determining the desired target which the control system can then uses in order to steer such that the "vessel" stays on the path, or is lead toward the path if the cross -track error (that is the the shortest distance to the path) is nonzero. Some of the most popular methods adopted by the marine community are line-of-sight(LOS) guidance, pure pursuit guidance, vector field guidance and constant bearing guidance \cite{qi_curve_2022}, \cite{lekkas_integral_2014}. 
 
 \paragraph*{Pure pursuit (Orthogonal Projection)}
-In the orthogonal projection/Pure pursuit method the point on path that is closest to the vehicle is used as the "reference point" and then steering towards the point. This leads the along-track error to always be zero and only the corss-track error need to be controlled. The method then computes the desired yaw rate in the case of boaths (i.e. how fast the vehicle should turn) to drive the cross-track error to zero. 
+In the orthogonal projection/Pure pursuit method the point on path that is closest to the vehicle is used as the "reference point" and then steering towards the point \cite{fossen_handbook_2011} \cite{amidi_integrated_1991}. This leads the along-track error to always be zero and only the cross-track error needs to be controlled \cite{hung_review_2023}. The method then computes the desired yaw rate in the case of boats (i.e. how fast the vehicle should turn) to drive the cross-track error to zero \cite{hung_review_2023}. 
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.7\linewidth]{images/pythonpictures/purepursuit.png}
     \caption{Visualization of orthogonal projection guidance (reference angle being the angle between z-axis and the purple arrow)}
     \label{fig:purepursuit}
 \end{figure}
-This approach is simple and intuitive. However, the convergence behavior may be problematic in practic. Since the controller always aims for the nearest point on the path it continues to generate turning commands even when the vehicle is nearly aligned. This causes overshooting and unnecessary steering corrections. Further, this method can encounter issues in certain geometric scenarios. Particularly on circular paths when the vehicle crosses the centerpoint of the curvature. In this case the projection onto the path is no longer well-defined and the method can break down.
+This approach is simple and intuitive. However, the convergence behavior may be problematic in practice. Since the controller always aims for the nearest point on the path it continues to generate turning commands even when the vehicle is nearly aligned. This causes overshooting and unnecessary steering corrections. Further, this method can encounter issues in certain geometric scenarios. Particularly on circular paths when the vehicle crosses the centerpoint of the curvature. In this case the projection onto the path is no longer well-defined and the method can break down \cite{fossen_handbook_2011}.
 
 \paragraph*{Line of Sight}
 The LOS guidance method is now widely used due to its small computational cost, easy implementation and intuitiveness \cite{qi_curve_2022} \cite{caharija_integral_2016}. Instead of using the closest point on the path, LOS guidance steers the vehicle toward a point located a fixed distance ahead on the path (known as the lookahead distance). In effect it imitates a helmsman steering the vessel toward a point lying at a constant distance ahead of the ship along the desired path \cite{caharija_integral_2016}. In the case of no enivronmental disturbances, simple LOS has good path convergence properties \cite{borhaug_integral_2008}. 
@@ -77,10 +75,10 @@ The LOS guidance method is now widely used due to its small computational cost, 
     \caption{Visualization of LOS guidance (the angle between the z-axis and the purple arrow becomes the reference pitch angle)}
     \label{fig:LOS}
 \end{figure}
-However, path following control approaches based on traditional LOS guidance are susceptible to environmental disturbances \cite{borhaug_integral_2008} or more generally all errors that case the actual navigation direction to differ from the guidance direction. In particular this will lead to path deviation and converegence problems \cite{borhaug_integral_2008}. Moreover, this drawback cannot be fixed by simply adding integral action to the heading controller, the problem originates from the heading reference generator, that is, the LOS guidance law itself \cite{borhaug_integral_2008}.
+However, path following control approaches based on traditional LOS guidance are susceptible to environmental disturbances \cite{borhaug_integral_2008} or more generally all errors that case the actual navigation direction to differ from the guidance direction. In particular this will lead to path deviation and convergence problems \cite{borhaug_integral_2008}. Moreover, this drawback cannot be fixed by simply adding integral action to the heading controller, the problem originates from the heading reference generator, that is, the LOS guidance law itself \cite{borhaug_integral_2008}.
 
 \paragraph*{Integral Line of Sight (ILOS)}
-To adress the limitation of traditional LOS, Børghaug et al. \cite{borhaug_integral_2008} proposed a guidance law based on the LOS guidance principle but that includes integral action to overcome the drawbacks of environmental disturbance while preserving the intuition and the simplicity of traditional LOS guidance.
+To address the limitation of traditional LOS, Børghaug et al. \cite{borhaug_integral_2008} proposed a guidance law based on the LOS guidance principle but that includes integral action to overcome the drawbacks of environmental disturbance while preserving the intuition and the simplicity of traditional LOS guidance.
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.7\linewidth]{images/pythonpictures/ILOS.png}
@@ -90,17 +88,14 @@ To adress the limitation of traditional LOS, Børghaug et al. \cite{borhaug_inte
 By integrating the cross-track error over time, ILOS effectively reduces steady-state error and restores path convergence even when the vessels actual movement direction deviates from its commanded heading.
 
 \paragraph*{Adaptive Methods}
-Adaptive guidance methods can improve path-following in uncertain or dynamic environments by adjusting parameters in real time. Several adaptive approaches have been adopted for path-following including adaptive LOS, where the lookahead distance is varied based on cross.track oerror or path curvature \cite{hung_review_2023}. This allows the system to steer more smoothly when far from the path and more precisely when close, reducing overshooting and unnecessary correction.
+Adaptive guidance methods can improve path-following in uncertain or dynamic environments by adjusting parameters in real time. Several adaptive approaches have been adopted for path-following including adaptive LOS \cite{fossen_direct_2017}, where for example the look-ahead distance is varied based on cross-track error \cite{lekkas_integral_2014} or path curvature \cite{liu_path_2017}, \cite{hung_review_2023}. This allows the system to steer more smoothly when far from the path and more precisely when close, reducing overshooting and unnecessary correction.
 \newline \newline 
-Other methods include adaptive vector field guidance which modifies the synthetic vector field used to steer the vehicle toward the path. By adjusting the shape or strength of the filed based on real-time errors or estimated disturbances \cite{soetanto_adaptive_2003}. Or other techniques including sliding mode control \cite{soetanto_adaptive_2003}, Learning-based MPC and reinforcement learning based control \cite{hung_review_2023}.
+Other methods include adaptive vector field guidance which modifies the synthetic vector field used to steer the vehicle toward the path \cite{wang_adaptive_2022} \cite{wang_adaptive_2022}. By adjusting the shape or strength of the filed based on real-time errors or estimated disturbances \cite{soetanto_adaptive_2003}. Or other techniques including sliding mode control \cite{soetanto_adaptive_2003} \cite{dagci_path_2003}, Learning-based MPC \cite{noauthor_learningbased_nodate}, \cite{rokonuzzaman_effective_2023} and reinforcement learning based control \cite{wang_path_2024}, \cite{martinsen_reinforcement_2020}, \cite{hung_review_2023}.
 
 \paragraph*{Model Predicitve Control (MPC)}
 Model Predictive Control (MPC) is an optimization-based approach that computes control actuation by predicting future system behavior over a finite time horizon. At each time step, it solves and optimal control problem that minimizes path-following error while satisfying system constraints such a speed, turnign limits, and actuator bounds \cite{hung_review_2023}. 
 \newline \newline
-Unlike geometric methods like LOS or pure pursuit, MPC can explicitly handle physical constraints and nonlinear dynamics. Linear model predictive control, nonlinear MPC and learning-based MPC have all been used in path following research \cite{hung_review_2023}. However they are complicated in terms of design and implementation since they involve solving an optimization problem online. Yet since they deal with the vehicle's input constraints i.e. velocity and angular rate explicitly they are  expected to outperform other path following strategies in cases that require teh vehicle to maneuver more agressively. Another advantage is that they can incoroprate more easily other tasks such as obstacle avoidance in the path following problem. Although using these methods is particularly challenging in environments and with devices that are not easily modeled.
-
-
-
+Unlike geometric methods like LOS or pure pursuit, MPC can explicitly handle physical constraints and nonlinear dynamics. Linear model predictive control \cite{kanjanawanishkul_mpc-based_2015}, nonlinear MPC \cite{guo_model_2019} \cite{xu_model_2021} and learning-based MPC have all been used in path following research \cite{hung_review_2023}. However they are complicated in terms of design and implementation since they involve solving an optimization problem online. Yet since they deal with the vehicle's input constraints i.e. velocity and angular rate explicitly they are  expected to outperform other path following strategies in cases that require the vehicle to maneuver more aggressively. Another advantage is that they can incorporate more easily other tasks such as obstacle avoidance in the path following problem. Although using these methods is particularly challenging in environments and with devices that are not easily modeled.
 
 
 \subsection{Design}
@@ -111,7 +106,7 @@ In the background chapter, several approached previously applied to modeling ste
 \subsubsection{Final 2D Kinematic model}
 As mentioned in the hardware section the ribbon device is moved up and down i.e. in the z-plane via control of the linear stage which is attatched at the proximal tip of the device. However movement in the x and y plane is controlled via controlling the tensions at the tendons which are attached to motors at the top and the tip of the ribbon at the bottom. When the ribbon is inserted in a brain phantom via the movement of the linear stage its trajectory will depend on the deflection of the tip. Which is in turn dependent on the tendon activation pattern which results in the bending or twisting of the tip. 
 \newline \newline
-To capture this behavior a unicycle type model inspired by \cite{ko_two-dimensional_2010} is used where the tip orientation is described using an Euler angle representation, which describes the orientation between the global frane and the local body coordinate frame as three rotations: roll \(\\phi\), pitch \(\theta\) and yaw \(\psi\) which represent rotations about the local body cartesian axes \(x\), \(y\) and \(z\) respectively.
+To capture this behavior a unicycle type model inspired by \cite{ko_two-dimensional_2010} is used where the tip orientation is described using an Euler angle representation, which describes the orientation between the global frame and the local body coordinate frame as three rotations: roll \(\phi\), pitch \(\theta\) and yaw \(\psi\) which represent rotations about the local body cartesian axes \(x\), \(y\) and \(z\) respectively.
 
 \begin{figure} [H]
     \centering
@@ -121,12 +116,6 @@ To capture this behavior a unicycle type model inspired by \cite{ko_two-dimensio
 \end{figure}
 
 
-\begin{figure} [H]
-    \centering
-    \includegraphics[width=0.55\linewidth]{images/pythonpictures/Capture.PNG}
-    \caption{Visualization of the $\theta$ angle the determines the rotation around the local y-axis}
-    \label{fig:theta}
-\end{figure}
 
 In the 2D kinematic model we assume the global y-position to be constant and thus there is no velocity component along that axis. When the tip bends in order to follow a trajectory it is performing a rotation around the local y-axis in the x-z-plane as is visualized in figure \ref{fig:theta} and \ref{fig:planes}. The rotational matrix thereby becomes
 
@@ -137,6 +126,13 @@ In the 2D kinematic model we assume the global y-position to be constant and thu
         sin \theta   &   0   &   cos \theta
     \end{bmatrix}
 \end{equation}
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{images/pythonpictures/Capture.PNG}
+    \caption{Visualization of the $\theta$ angle the determines the rotation around the local y-axis}
+    \label{fig:theta}
+\end{figure}
 and the kinematic model becomes
 \begin{equation}
     \vec{v_g} = \textbf{R}(\theta) \vec{v_b}
@@ -183,17 +179,17 @@ Further since the ribbon is inserted via the linear stage moving the backbone do
 	\end{bmatrix} v_z^b
 \end{equation}
 
-In terms of the rotational velocity, it is defined by the relationship between the instantaneous curvature $\kappa$ at the tip and the insertion velocity $v_z^b$. Since 
-\begin{equation}
-    \frac{d}{dt}\theta  = \frac{d\theta}{ds}\frac{ds}{dt}=\kappa v_z^b
-\end{equation}
-
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.6\linewidth]{images/pythonpictures/curvature.PNG}
     \caption{Visualization of how the curvature of the tip $\kappa$ controlled by the difference in tension on the left side \(T_1, T_2\) and right \(T_3, T_4\) influences the trajectory of the ribbon}
     \label{fig:curvature}
 \end{figure}
+
+In terms of the rotational velocity, it is defined by the relationship between the instantaneous curvature $\kappa$ at the tip and the insertion velocity $v_z^b$. Since 
+\begin{equation}
+    \frac{d}{dt}\theta  = \frac{d\theta}{ds}\frac{ds}{dt}=\kappa v_z^b
+\end{equation}
 
 The instantaneous curvature $\kappa_{tip}$, visualized in figure \ref{fig:curvature} is further assumed to be a function of the difference in tension between the tendons on the right and left side $f(u)$, which is given by the actuation variable defined as $u$. Where $f(u)$ is a monotonically increasing function of the actuation variable. In this project this is simplified to be a linear function, independent of previous states and defined by only the offset $b$ and the slope $a$. 
 \begin{equation}
@@ -230,23 +226,20 @@ Before any path following is done the ribbon is run through a calibration protoc
 Where \(T_{3,4}\) corresponds to the tension on tendon 3 and 4 which are placed on the right side, and \(T_{1,2}\) corresponds to the tension on tendon 1 and 2 which are on the left side. 
 \newline \newline
 To assist the controller and improve responsiveness, a feedforward signal based on the local path curvature at the closest point is calculated by the \texttt{FeedbackCalculator} modulate. This feedbackterm \(u_{d, ff}\) is then combined with the feedback term and sent to the \texttt{TensionConverter} module. This module converts that actuation value into individual tendon tension targets \(\textbf{T}_d\) based on a set of rules which ensure a baseline tension is maintained and tension limits aren't exceeded. These targets are then sent to the low-level tension controllers (see closed-loop tension control chapter) which ensure that the tendons track their tension targets using feedback from force sensors.
-\newline \newline
-This modular and layered control structure supports accurate and smooth path following, while being modular and scalable. 
+
 
 
 \subsubsection{Choice of Guidance system}
 The chosen path-following strategy must above all be reliable, modular and suit the constraints of the ribbon-based system. Among the available options, pure pursuit, LOS, ILOS, adaptive and MPC, the initial chosen strategy is LOS guidance is it is a simple yet very effective solution to path following.
 \newline \newline 
-Although more advanced techniques such as MPC or more advanced form of adaptive control could provide better performance in theory, they are currently impractical for this system. In particular, implementing MPC poses siggnificant challenges because of teh highly nonlinear and complex dynamics of the ribbon. The tendon actuation results in strong coupling between degrees of freedom and the deformation fo the ribbon is influenced by wear, material hysteresis, bucklin and loading history. The future surgical environment adds another layer of complexity through contact forces with tissue that are difficult to predict and incorporate into the optimization framework. All of which make it extremely difficult to develop an accurate predictive model required for MPC.
+Although more advanced techniques such as MPC or adaptive control could provide better performance in theory, they are currently impractical for this system. In particular, implementing MPC poses significant challenges because of the highly nonlinear and complex dynamics of the ribbon. The tendon actuation results in strong coupling between degrees of freedom and the deformation fo the ribbon is influenced by wear, material hysteresis, buckling and loading history. The future surgical environment adds another layer of complexity through contact forces with tissue that are difficult to predict and incorporate into the optimization framework. All of which make it extremely difficult to develop an accurate predictive model required for MPC.
 \newline \newline
-For these reasons, LOS offers a better, more practical solution. LOS is relatively straightforward to implement and has good convergence properties in undisturbed environments. It is also very easy to expand upon by adding a integral term, creating a ILOS guidance system that would better handle disturbances. It can even be made adaptive by making the look-ahead distance change based on chosen factors. It is therefore a good starting off point for the system.
+For these reasons, LOS offers a better, more practical solution. LOS is relatively straightforward to implement and has good convergence properties in undisturbed environments. It is also very easy to expand upon by adding a integral term, creating a ILOS guidance system that would better handle disturbances. It can even be made adaptive by making the look-ahead distance change based on chosen factors such as curvature or cross-track error. It is therefore a good starting off point for the system.
 
 \subsubsection{Final LOS Guidance System Design}
-As discussed in the chapter on the final 2D kinematic model of the ribbon the spatial position of the tip of the ribbon is represented by \(P(t) \triangleq [x(t), z(t)]^T\) and its velocity is \(v(t) \triangleq \dot{P}(t)\), stated relative to the stationary global frame. The speed is represented by \(U(t) \triangleq |v(t)| = \sqrt{\dot{x}(t)^2 + \dot{z}(t)^2}\).
+As discussed in the chapter on the final 2D kinematic model of the ribbon the spatial position of the tip of the ribbon is represented by \(P(t) \triangleq [x(t), z(t)]^T\) and its velocity is \(v(t) \triangleq \dot{P}(t)\), stated relative to the stationary global frame. The speed is represented by \(U(t) \triangleq |v(t)| = \sqrt{\dot{x}(t)^2 + \dot{z}(t)^2}\). The steering is characterized the angular variable \(\theta(t) \triangleq atan2(\dot{x}(t), \dot{z}(t))\) (visualized in figure \ref{fig:theta}). Path following is then ensured by proper assignments to \(\theta(t)\).
 \newline \newline
-The steering is characterized the angular variable \(\theta(t) \triangleq atan2(\dot{x}(t), \dot{z}(t))\) (visualized in figure \ref{fig:theta}. Path following is then ensured by proper assignments to \(\theta(t)\).
-\newline \newline
-In the final LOS guidance system design we consider a planar path continuously parameterized by a scalar variable, \(\epsilon \in \mathbb{R}\), such that the position of a point belonging to the path is represented by \(P_p(\epsilon) \triangleq [x_p(\epsilon), z_p(\epsilon)]^T\). Subsequently we consider an arbitrary path point \(P_p(\epsilon)\) and define a path-fixed reference frame with origin at this point. Then starting with the same orientation as the global stationary frame, a simple elementary rotation can be performed to arrive at this path-fixed frame. This is done by rotating the stationary frame by the path-tangential angle
+In the final LOS guidance system design we consider a planar path continuously parameterized by a scalar variable, \(\epsilon\), such that the position of a point belonging to the path is represented by \(P_p(\epsilon) \triangleq [x_p(\epsilon), z_p(\epsilon)]^T\). Subsequently we consider an arbitrary path point \(P_p(\epsilon)\) and define a path-fixed reference frame with origin at this point. Then starting with the same orientation as the global stationary frame, a simple elementary rotation can be performed to arrive at this path-fixed frame. This is done by rotating the stationary frame by the path-tangential angle
 \begin{equation}
     \zeta_p(\epsilon) = atan2(x_p'(\epsilon), z_p'(\epsilon))
 \end{equation}
@@ -326,6 +319,12 @@ which by geometrical simplification can be transformed to the more traditional f
 
 \subsubsection{Final ILOS Guidance System Design}
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{ilos}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
 
 \subsubsection{Choice of Ribbon Adaptation Method}
 
@@ -358,26 +357,25 @@ In order to orchestrate the cooperation between these classes and their dataflow
 
 \subsubsection{Ribbon Adaptation Method}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.5\linewidth]{images/ribbonadapter/aircalib_right_tension1500_2025-06-17_17-36-39_cam2.png}
-    \caption{Caption}
-    \label{fig:enter-label}
-\end{figure}
-
 \begin{figure}[H]
     \centering
-    \begin{subcaptionbox}{Old insertion strategy using a "conveyor belt" \label{fig:conveyor}}[0.45\linewidth]
+    \begin{subcaptionbox}{\label{fig:conveyor}}[0.45\linewidth]
         {\includegraphics[width=\linewidth]{images/ribbonadapter/aircalib_right_tension1500_2025-06-17_17-36-39_cam23.png}}
     \end{subcaptionbox}
     \hspace{0.05\linewidth}
-    \begin{subcaptionbox}{New insertion strategy using a linear stage\label{fig:right}}[0.45\linewidth]
+    \begin{subcaptionbox}{\label{fig:right}}[0.45\linewidth]
         {\includegraphics[width=\linewidth]{images/ribbonadapter/aircalib_right_tension1500_2025-06-17_17-36-39_cam2_debug3.png}}
     \end{subcaptionbox}
-    \caption{Comparison of the previous hardware iteration (a) and the new hardware (b) assembled during this thesis}
-    \label{fig:insertionStrategies}
+    \caption{}
+    \label{fig:ribbonadaptation}
 \end{figure}
 
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/ribbonadapter/ribbonfit_2025-06-30_15-59-06.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
 
 
 \subsubsection{Tuning Methodology}
@@ -481,6 +479,46 @@ The \texttt{TensionConverter} class implements this conversion through the \text
 
 \subsubsection{Ribbon Adaptation}
 
+\paragraph*{Observed Difference in Ribbon Dynamics}
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/ribbonadapter/Ribbonfit_2025-06-27_18-55-42-scaledaxis.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/ribbonadapter/ribbonfit_2025-06-30_09-22-24.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+\paragraph*{Observed Hysteresis}
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/ribbonadapter/Ribbonfit_2025-06-17_17-34-03.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+\paragraph*{Observed Effect of Hardened Gelatin}
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/ribbonadapter/ribbonfit_2025-06-27_17-45-46.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{images/ribbonadapter/ribbonfit_2025-06-30_15-59-06.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+
+
 \subsubsection{Pitch Tracking}
 
 \subsubsection{LOS Path-Following}
@@ -490,7 +528,11 @@ The \texttt{TensionConverter} class implements this conversion through the \text
 
 \subsection{Discussion}
 
+\subsubsection{Closed-Loop Design}
+This modular and layered control structure supports accurate and smooth path following, while being modular and scalable. 
+
 \subsubsection{Ribbon Adaptation}
+
 
 \subsubsection{Pitch Tracking}
 
