@@ -21,3 +21,18 @@ The \texttt{Guidance} class implements the core navigation algorithm that genera
 In order for the ribbon to follow the path, the tip must continuously align wiht the desired pitch angle \(\theta_{ref}\) computed by the lOS algorithm. However,the physical system is controlled through tendon tensions which induce bending at the distal tip. Therefore, an intermedediate control layer, a pitch autopilot, must be implemented to convert heading references into actuator-level commands.
 \newline \newline
 It was decided 
+
+\subsubsection{Tuning Methodology}
+the Ziegler-Nichols relay method assumes that:
+
+The system has an oscillatory behavior when switching between min and max control effort.
+
+The output returns toward the setpoint (or crosses it) once actuation is disabled, creating that nice sine-like signal from which to estimate the ultimate gain and period.
+
+But in your case — tendon-actuated heading control — that doesn’t apply:
+
+Once you've pulled the tendons to deform the tip and achieve a certain heading, the heading stays there unless you actively pull the other way.
+
+There’s no natural restoring force — no spring-back, no drift back — so the "relay" logic of toggling output and watching the system cross the setpoint repeatedly breaks down.
+
+This is more like trying to autotune a position-controlled robot arm joint where gravity and friction dominate and the joint stays where it's told.
