@@ -9,7 +9,7 @@
    id="svg5"
    inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
    sodipodi:docname="ILOS.svg"
-   inkscape:export-filename="C:\Users\MAGNETO\Documents\Katla\MasterThesis\images\inkscape\pathframee.png"
+   inkscape:export-filename="C:\Users\MAGNETO\Documents\Katla\MasterThesis\images\inkscape\ILOS.png"
    inkscape:export-xdpi="600"
    inkscape:export-ydpi="600"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -27,12 +27,12 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="1"
-     inkscape:cx="435.5"
-     inkscape:cy="175.5"
+     inkscape:cx="427.5"
+     inkscape:cy="205.5"
      inkscape:window-width="1284"
      inkscape:window-height="1040"
-     inkscape:window-x="2039"
-     inkscape:window-y="78"
+     inkscape:window-x="-32000"
+     inkscape:window-y="-32000"
      inkscape:window-maximized="0"
      inkscape:current-layer="layer1"
      showguides="false" />
@@ -329,8 +329,8 @@
        cy="48.958542"
        r="1.9569681" />
     <path
-       style="fill:none;stroke:#00a0f3;stroke-width:0.192389;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.384779, 0.192389;stroke-dashoffset:0;stroke-opacity:1"
-       d="M 154.90612,26.43121 112.48347,131.47782"
+       style="fill:none;stroke:#00a0f3;stroke-width:0.192172;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.384345, 0.192172;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 154.85813,26.431169 112.48337,131.35921"
        id="path1623-48" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.3,1.8;stroke-dashoffset:0;stroke-opacity:1"
@@ -361,12 +361,12 @@
        d="m 97.47805,51.16688 13.36164,22.09811"
        id="path14414-3" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.427571;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker14737-4)"
-       d="m 120.93878,33.752633 -0.0389,10.156581"
+       style="fill:none;stroke:#000000;stroke-width:0.45;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker14737-4)"
+       d="m 162.28664,120.40986 -0.0354,9.23325"
        id="path1623-47" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.427562;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-2)"
-       d="m 121.04489,33.669996 10.15561,0.08704"
+       style="fill:none;stroke:#000000;stroke-width:0.45;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-2)"
+       d="m 162.05513,120.62483 9.23238,0.0791"
        id="path1623-4-1" />
     <text
        xml:space="preserve"
@@ -382,25 +382,25 @@
     <text
        xml:space="preserve"
        style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';stroke-width:0.264583"
-       x="117.21066"
-       y="43.920864"
+       x="158.22108"
+       y="129.91045"
        id="text7796"><tspan
          sodipodi:role="line"
          id="tspan7794"
          style="font-size:4.23333px;stroke-width:0.264583"
-         x="117.21066"
-         y="43.920864">z</tspan></text>
+         x="158.22108"
+         y="129.91045">z</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';stroke-width:0.264583"
-       x="129.38155"
-       y="37.438557"
+       x="169.33365"
+       y="124.48647"
        id="text15654"><tspan
          sodipodi:role="line"
          id="tspan15652"
          style="font-size:4.23333px;stroke-width:0.264583"
-         x="129.38155"
-         y="37.438557">x</tspan></text>
+         x="169.33365"
+         y="124.48647">x</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:3.52777px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';fill:#0091e2;fill-opacity:1;stroke-width:0.264583"
@@ -545,8 +545,8 @@
    style="font-size:2.46944px;baseline-shift:sub"
    id="tspan271445">r</tspan></tspan></text>
     <path
-       style="fill:none;stroke:#0071ab;stroke-width:0.197832;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.395664, 0.197832;stroke-dashoffset:0;stroke-opacity:1"
-       d="M 180.64807,33.52931 137.02532,141.54756"
+       style="fill:none;stroke:#0071ab;stroke-width:0.192172;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.384345, 0.192172;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 179.39748,36.703252 137.0227,141.63131"
        id="path1623-48-6" />
     <path
        style="fill:none;stroke:#1027c2;stroke-width:0.309;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#Arrow1Sstart-6);marker-end:url(#Arrow1Send-2)"
