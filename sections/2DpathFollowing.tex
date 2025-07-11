@@ -510,23 +510,21 @@ The ramping region spans the end of the current segment and the beginning of the
 
 
 \subsubsection{Ribbon Adapter}
-The control system also includes a \texttt{RibbonAdapter} that translates desired curvature commands from the feedback controller into the appropriate control variable \(u_{d,fb}\) for the specific ribbon device. This adaptation accounts for the individual curvature-tension characteristics of each ribbon. This conversion is based on the "air calibration" procedure described in the methods section, which establishes the realationship between applied tendon actuation and resulting tip curvature for the given ribbon. The conversion uses the experimentally determined slope and offset parameters that capture the ribbons mechanical response via fitting one horizontal segment for the deadzone and two linear slopes:
+The \texttt{RibbonAdapter} module translates desired curvature commands from the feedback controller into the appropriate control variable \(u_{d,fb}\) for the specific ribbon device. This adaptation accounts for the individual curvature-tension characteristics of each ribbon. This conversion is based on the ribbon dynamics identification process described in the methods section, which establishes the relationship between applied tendon actuation and resulting tip curvature for the given ribbon. As shown in figure \ref{fig:curvaturevstension}, the relationship is modeled as a three-segment piecwise funciton consisting of a central horizontal region (the pre-curvature deadzone) and two linear slopes for left and right bending. These parameters in the bottom right fhese functions are entered into the system via the calibrator tab in the GUI \ref{fig:calibratortab}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{images/gui/calibrator.PNG}
+    \caption{Calibrator tab where the user inserts the ribbon dynamics identified by running the ribbon dynamics identification process}
+    \label{fig:calibratortab}
+\end{figure}
+
+In the implementation, the adapter selects either the left or right slope and offset depending on whether the desire curvature is above or below the ribbon's neutral pre-curvature. The actuation value is then computed using the following expression:
 \begin{equation}
 u = \frac{|\kappa_{output}| - \text{Offset}}{\text{Slope}}
 \end{equation}
-Once the calibration protocol described in the methods is finished and the user has a figure such as \ref{fig:curvaturevstension}, the user needs to put in the values of the the slopes and offset for the left and right as well as the pre-curvature value of the ribbon, represented by the horizontal line into the . 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.5\linewidth]{gui}
-    \caption{Caption}
-    \label{fig:enter-label}
-\end{figure}
-
-
 Then the controlvariable is given the same sign as the curvature to maintain the correct bending direction, with positive values corresponding to rightward deflection and negative values to leftward deflection.
 \newline \newline
-The output of the controller is a scalar actuation variable that represents the differential tension required between the left and right tendon groups. This value is later converted into explicit tendon tension setpoints in the next stage of the autopilot
-
+The output of the controller is a scalar actuation variable \(u_{d,fb}\) that represents the differential tension required between the left and right tendon groups. This value is later converted into explicit tendon tension setpoints in the next stage of the pitch autopilot.
 
 \subsubsection{Tension converter}
 The final step in the control loop is converting the actuation variable that is defined as 
@@ -546,43 +544,53 @@ T_1 = T_2 = T_3 = T_4 = 100 \text{ mN} & \text{if } u = 0
 
 The \texttt{TensionConverter} class implements this conversion through the \texttt{convertToTension()} method, which also enforces maximum tension limits to prevent over-actuation that could damage the ribbon.
 
-
-
-\paragraph*{F}
-
 \subsection{Results}
 
 \subsubsection{Ribbon Adaptation}
+After implementing the Ribbon dynamics identification process several interesting observations were made. Two are highlighted here.
 
-\paragraph*{Observed Difference in Ribbon Dynamics}
-
-
-\paragraph*{Observed Hysteresis}
+\paragraph*{Hysteresis Effect}
+Initially the ribbon dynamics identification process was done by stepping up the tension on one side in 50mN intervals, and then after reaching the maximum desired tension it would reset back to neutral tension on all tendons and repeat the process for the opposite side. This resulted in data that appeared highly linear, as can be seen in figure \ref{fig:hysteresis}
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.9\linewidth]{images/ribbonadapter/Ribbonfit_2025-06-17_17-34-03.png}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \caption{Initial curvature, tension fit obtained by applying only increasing tensions on each side of the ribbon.}
+    \label{fig:hysteresis}
 \end{figure}
+However during experiments it was observed that the resulting curvature when lowering tension vs increasing tension were different, meaning that there was likely a hysteresis effect. The process was therefore changed to step up the tension and then step it down in order to allow the data to reflect this suspected hysteresis effect. As can be seen in figures \ref{fig:curvaturevstension} and \ref{fig:curvaturevstension2} the hysteresis effect is clearly visible with the curvature not decreasing at all during the initial decreases in tendon tension after having reached the highest tension on each side.
 
-\paragraph*{Observed Effect of Hardened Gelatin}
+
+\paragraph*{Effect of Hardened Gelatin}
+Another notable effect was the altered ribbon dynamics observed after the ribbon had been inserted into gelatin the previous day. Figure \ref{fig:gelatin} exemplifies the typical response in this state. Paying attention to the values on the y-axis its clear that the ribbon barely curves, even at values as high as 1500mN.
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.9\linewidth]{images/ribbonadapter/ribbonfit_2025-06-27_17-45-46.png}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \caption{Curvature vs tendon actuation for a ribbon that previously been inserted into gelatin}
+    \label{fig:gelatin}
 \end{figure}
+To address this, the ribbon was cleaned by soaking it in heated, distilled water and pushing out the gelatin in an attempt to dissolve and remove the hardened gelatin. After cleaning, the same ribbon was re-calibrated just 30 minutes later. As shown in figure \ref{fig:curvaturevstension2}, the curvature response returned to expected levels, clearly demonstrating the beneficial effect of cleaning after running experiments in gelatin. 
 
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.9\linewidth]{images/ribbonadapter/ribbonfit_2025-06-30_15-59-06.png}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \caption{Restored curvature response after cleaning the ribbon.}
+    \label{fig:curvaturevstension2}
 \end{figure}
+
+\paragraph*{Effect of Dry Tendons}
+A similar, yet less severe, degradation in curvature response was observed when the ribbon was completely dry. In this case, the tendons exhibited highly non-linear behavior with limited curvatures, even at high actuation values. This issue was however simply resolved by dipping the ribbon in water prior to calibration. This led to an immediate recovery of the expected curvature-tension behavior.
 
 
 
 \subsubsection{Pitch Tracking}
+\todo{write section?}
+
+\subsubsection{Open-Loop Path-Following}
+
+\paragraph*{Straight line following}
+\beg
+
+\paragrpah*{Open-Loop Path-Following}
 
 \subsubsection{LOS Path-Following}
 
@@ -595,6 +603,10 @@ The \texttt{TensionConverter} class implements this conversion through the \text
 This modular and layered control structure supports accurate and smooth path following, while being modular and scalable. 
 
 \subsubsection{Ribbon Adaptation}
+This results in a hysteresis loop that cannot be modeled using a single-valued function. While the fitted model still uses a simplified three-segment piecewise function (as described earlier), users must be aware that the actual system response includes history-dependent effects. This has implications for control accuracy, particularly during rapid or alternating actuation cycles.
+
+The immediate recovery of expected curvature–tension behavior suggests that tendon lubrication is essential. Without it, friction within the tendon channels likely prevents smooth tendon motion, resulting in impaired bending. As a result, it is now standard practice to hydrate the ribbon before each calibration or experiment.
+
 
 
 \subsubsection{Pitch Tracking}
