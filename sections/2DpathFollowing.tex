@@ -3,6 +3,7 @@
 \lhead{2D Path following} % section header
 This final section describes how 2D path following was achieved for the ribbon robot. It begins with an analysis of some relevant literature, it then describes the kinematic model designed for the system and the control systems final design, which combines all the components described in previous chapters as well as a closed-loop pitch control and Integral-Line-Of-Sight (ILOS) guidance system. The implementation of these two last components is then explained as well as the device-specific adaptation method implemented due to differences in device dynamics. This all finally enables real-time following of preset paths through the brain phantom, the results of which are presented and discussed. The final subchapter then discusses some possible future developments.
 
+\lhead{2D Path following - Background} % section header
 \subsection{Background}
 \subsubsection{Kinematic Modeling of Similar Devices}
 Devices with kinematic similarities to the tendon-driven ribbon-shaped device primarily include steerable needles, concentric tube robots, and tendon-drive continuum robots. Each of these devices rely on structural flexibility and and actuation mechanism that creates a curvature or deformation that allows for navigating through soft biological tissues. However none of their models are directly applicable.
@@ -97,7 +98,7 @@ Model Predictive Control (MPC) is an optimization-based approach that computes c
 \newline \newline
 Unlike geometric methods like LOS or pure pursuit, MPC can explicitly handle physical constraints and nonlinear dynamics. Linear model predictive control \cite{kanjanawanishkul_mpc-based_2015}, nonlinear MPC \cite{guo_model_2019} \cite{xu_model_2021} and learning-based MPC have all been used in path following research \cite{hung_review_2023}. However they are complicated in terms of design and implementation since they involve solving an optimization problem online. Yet since they deal with the vehicle's input constraints i.e. velocity and angular rate explicitly they are  expected to outperform other path following strategies in cases that require the vehicle to maneuver more aggressively. Another advantage is that they can incorporate more easily other tasks such as obstacle avoidance in the path following problem. Although using these methods is particularly challenging in environments and with devices that are not easily modeled.
 
-
+\lhead{2D Path following - Design} % section header
 \subsection{Design}
 
 \subsubsection{Choice of Kinematic Modeling Approach}
@@ -334,27 +335,37 @@ Where \(K_i\) is a tunable design parameter, and integral gain and \(\Delta\) ha
 And the reference steering angle \(\theta_r\) with ILOS guidance remains identical to equation (28), only with a re-definition of the \(\zeta_r\) parameter.
 
 \subsubsection{Ribbon Adaptation Motivation and Design}
-A later addition to the design of the system is the ribbon adaptation module. This module is responsible for taking in the desired curvature and giving out the appropriate desired actuation \(u_d\) this specific device needs to apply in order to achieve this specific curvature. 
-\paragraph*{Motivation}
-During testing it was observed that devices would display markedly different dynamics, but also the same device could behave differently from day to day. This is likely due to wear in terms of gelatin from the brain phantom entering the ribbon and hardening inside the tendon tracks leading to higher internal friction over time (more on this in the results section). Although a small difference from day to day was also observed when the device had not been inserted into gelatin. An example of observed difference can be seen by comparing figur
+A later addition to the design of the system is the ribbon adaptation module. This module is responsible for taking in the desired curvature and giving out the desired device-specific actuation \(u_d\) needed for this device to achieve the desired curvature. 
+
+\paragraph*{Ribbon Adaptation Motivation}
+During testing it was observed that devices would display markedly different dynamics, but also the same device could behave differently from day to day. This is likely due to wear in terms of gelatin from the brain phantom entering the ribbon and hardening inside the tendon tracks leading to higher internal friction over time (more on this in the results section). Although a small difference from day to day was also observed when the device had not been inserted into gelatin. An example of of the inter-day differences can be seen when comparing figure \ref{fig:scaledaxis} to \ref{fig:bigamp}. 
+\newline \newline 
+These plots show the acquired curvature (in air) when a certain tendon actuation is applied (more on how this is done in the methods chapter on ribbon adaptation). These two plots show the behavior of the same ribbon, but some days apart. As we can see the curvatures achievable by the ribbon in figure \ref{fig:bigamp} are approximately double the curvatures achieved the ribbon in figure \ref{fig:scaledaxis} at the same tendon actuation. 
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\linewidth]{images/ribbonadapter/Ribbonfit_2025-06-27_18-55-42-scaledaxis.png}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \caption{Measured curvature of the ribbon in air as a function of tendon actuation. The ribbon shows limited curvature response compared to figure \ref{fig:bigamp}}
+    \label{fig:scaledaxis}
 \end{figure}
 
 \begin{figure} [H]
     \centering
-    \includegraphics[width=0.9\linewidth]{images/ribbonadapter/ribbonfit_2025-06-30_09-22-24.png}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \includegraphics[width=0.9\linewidth]{images/ribbonadapter/RibbonFit_2025-07-03_09-38-33.png}
+    \caption{Measured curvature of the same ribbon in air at the same tendon actuation range. Curvature amplitudes are roughly double those seen in Figure \ref{fig:scaledaxis}, indicating reduced internal friction.}
+    \label{fig:bigamp}
 \end{figure}
 
+If one were not to take into account this difference in behavior and would simply output the same desired tendon actuation, \(u_d\), on every day for every device the system would work very poorly. Particularly PI feedback controller that ensures that the measured pitch \(\theta_m\) tracks the desired pitch \(\theta_r\) would be impossible to tune as the same control gains could lead to either sluggish under performance or unstable overshooting. This variability would severely degrade tracking accuracy and result in very little reproducibility and require re-tuning for every day. It was therefore decided that it was necessary to implement some way of taking this day-to-day and device-to-device variability into account.
 
+\paragraph*{Ribbon Adaptation Design }
+In order to implement the adaptation strategy several options were considered. Since an autopilot for the pitch had already been designed and implemented (before the extent of the variability was understood) the first evaluated approach was to automatically tune the existing PI controller for the pitch. Several analogous cases for ships were found including \cite{puntunan_online_2006}, \cite{tomera_fuzzy_2017}, \cite{zhang_-line_2020}, \cite{tung_self-tuning_2023} where self-tuning PID controllers were implemented using methods such as fuzzy logic and neural networks. However, these approaches were all quite complex and more importantly required extensive data for proper tuning. For the the ribbon system, collecting this amount of data would have required numerous runs in gelatin. This presented a major issue since running the ribbon in gelatin before surgical use would risk risk contamination making it unsuitable for insertion after tuning. 
+\newline \newline
+Therefore a completely different approach to the problem was taken. Instead of adaptively tuning the pitch PI controller, the output of the controller would be adapted to each device. This meant that instead of the PI controller directly outputting the desired tendon actuation, it would output a desired curvature. This curvature would then be converted into the appropriate tendon actuation based on the dynamics of that specific device.
+\newline \newline
+Several methods of identifying this mapping between the curvature and tendon actuation were evaluated. The most accurate approach would have involved running a full length insertion into gelatin at various constant tendon tensions and then identifying the resulting curvatures. However this would have required a lot of time and would pose the same issue as previously: contaminating the device. Therefore a much less time consuming approach of observing the resulting curvatures of different tensions in air was chosen. This still results in conversion equations specific for each device, and as it was expected that as long as the PI control was  tuned based on this air conversion the difference in medium would have minimal impact on control performance.
 
-
+\lhead{2D Path following - Methods} % section header
 \subsection{Methods}
 
 \subsubsection{Path-Following Implementation Methodology}
@@ -376,61 +387,93 @@ In order to orchestrate the cooperation between these classes and their dataflow
     \label{fig:pathfolloingmodules}
 \end{figure}
 
-\subsubsection{Ribbon Adaptation Method}
+\subsubsection{Ribbon Dynamics Identification Process}
+This subsection describes the methodology behind identifying the device specific curvature vs tendon actuation conversion equations necessary for the ribbon adaptation described in the design chapter. The process consists of four steps which are described below in the  order of execution.
 
+\paragraph*{Applying the Tendon Actuation Values}
+The first step is to start the vision system and then press the start calibration button in the GUI. This triggers a method in the \texttt{AirCalibrator} class that begins by pushing the ribbon out of the feeder by 40mm, and then begins a sequence of applying increasing tensions on one side from 100mN up to 1500mN, in 50mN intervals, sending a command to the python program to capture a picture such as the one in figure \ref{fig:pictureRibbon} at each actuation setpoint. After reaching 1500mN it steps the tension down again using the same intervals until the tension on all tendons is neutral i.e. 100mN. Thereafter it repeats the same process on the other side. Finally it retracts the ribbon back to its original position.
 
+\paragraph*{Extracting the Resulting Curvatures}
+In order to determine the resulting curvatures at each tension actuation value the \texttt{curvaturedetector.py} script was written. This script processes each image captured during calibration by first subtracting the background (an image captured automatically before moving the ribbon) and skeletonizing the difference to extract the ribbon's centerline. The extracted centerline is then down sampled to fit a smooth spline, and the curvature is estimated by fitting a circle to the spline points and computing its signed curvature. It optionally generates visual debug images showing the detected centerline and the fitted circle such as the one in figure \ref{fig:centerline} The script also automatically matches each image with its corresponding tension value (extracted from the metadata in the filename), and saves the resulting curvatures in a CSV file.
 
 \begin{figure}[H]
     \centering
-    \begin{subcaptionbox}{\label{fig:conveyor}}[0.45\linewidth]
+    \begin{subcaptionbox}{Picture taken by the python vision program at a tendon actuation of +1500mN, such pictures are taken at 50mN intervals for later use in curvature detection \label{fig:pictureRibbon}}[0.45\linewidth]
         {\includegraphics[width=\linewidth]{images/ribbonadapter/aircalib_right_tension1500_2025-06-17_17-36-39_cam23.png}}
     \end{subcaptionbox}
     \hspace{0.05\linewidth}
-    \begin{subcaptionbox}{\label{fig:right}}[0.45\linewidth]
+    \begin{subcaptionbox}{Visual debug image generated for (a) by the \texttt{curvaturedetector.py} script, such images are created for every corresponding image taken during the calibration process, visualizing the detected centerline as well as the fitted circle \label{fig:centerline}}[0.45\linewidth]
         {\includegraphics[width=\linewidth]{images/ribbonadapter/aircalib_right_tension1500_2025-06-17_17-36-39_cam2_debug3.png}}
     \end{subcaptionbox}
-    \caption{}
+    \caption{Tendon calibration procedure and resulting curvature extraction. (a) Raw image captured at a tendon actuation of 1500mN during the calibration routine. (b) Corresponding debug output generated for determining resulting curvature.}
     \label{fig:ribbonadaptation}
 \end{figure}
 
+\paragraph*{Fitting the Curvature-Tension Function}
+Then to determine the conversion function from tendon actuation to curvature another script \texttt{curvatureVsTnsion.py} was written. It reads the curvature results, assigns signed tension values based on whether the left or right tendons were actuated, and fits a continuous piecewise function with three segments: a linear slope for left actuation, a flat horizontal segment around zero tension representing the ribbon’s pre-curvature at neutral tension and its deadzone, and a second linear slope for right actuation.
 \begin{figure} [H]
     \centering
     \includegraphics[width=0.9\linewidth]{images/ribbonadapter/ribbonfit_2025-06-30_15-59-06.png}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \caption{Result of running the \texttt{curvatureVsTension.py} script which fits a three segment model by optimization to relate Curvature and Tendon actuation}
+    \label{fig:curvaturevstension}
 \end{figure}
+The script uses a weighted least-squares optimization to emphasize the accuracy of the horizontal segment since that has less data point than the other segments, and allows for asymmetry between the left and right sides. To find a good fit, the script uses a multi-start approach where it generates a wide range of initial uesses for the segment voundaries and slope parameters. Each candidate is optimized using the Sequential Leas Squares Programming (SLSQP) method provided in by the \texttt{Scipy minimize} method. The best-performing model is selected based on the lowest weighted error. The final function is then plotted along with the expression for each segment (as seen in figure \ref{fig:curvaturevstension} which are later used in the control system.
 
+\subsection{Feedforward Characterization Process}
+\todo{write section?}
 
 \subsubsection{Tuning Methodology}
-the Ziegler-Nichols relay method assumes that:
-
-The system has an oscillatory behavior when switching between min and max control effort.
-
-The output returns toward the setpoint (or crosses it) once actuation is disabled, creating that nice sine-like signal from which to estimate the ultimate gain and period.
-
-But in your case — tendon-actuated heading control — that doesn’t apply:
-
-Once you've pulled the tendons to deform the tip and achieve a certain heading, the heading stays there unless you actively pull the other way.
-
-There’s no natural restoring force — no spring-back, no drift back — so the "relay" logic of toggling output and watching the system cross the setpoint repeatedly breaks down.
-
-This is more like trying to autotune a position-controlled robot arm joint where gravity and friction dominate and the joint stays where it's told.
+\todo{write section?}
 
 \subsubsection{Validation Plan for Path-Following}
+\todo{write section?}
 
 
+\lhead{2D Path following - Implementation} % section header
 \subsection{Implementation}
+This subsection briefly describes how every module in the path following part of the control system visualized in figure \ref{fig:2DpathfollowingSystemControlDiag} is implemented in the code base. 
 
 \subsubsection{Guidance System (LOS and ILOS)}
+The guidance system module responsible for taking in the path and outputting the reference pitch angle \(\theta_r\) was implemented in two different ways. First a classic LOS module was implemented, then later in the thesis this was switched out with an ILOS guidance system.
 \paragraph*{Line-Of-Sight (LOS)}
+The LOS system design described earlier is discretized and implemented in the \texttt{LineOfSight} class and is responsible for calculating \(\theta_r\) based on the probe's current tip position and a set of predefined waypoints. The closes point on the path is selected by minimizing the Euclidean distance between the tip and all path points
+\begin{equation}
+\epsilon^* = \arg\min_\epsilon \left\{ (x - x_\epsilon)^2 + (z - z_\epsilon)^2 \right\}
+\end{equation}
+From the selected path point \(P_p(\epsilon) = [x_\epsilon, z_\epsilon]^T\), the path tangential angle is computes as 
+\begin{equation}
+\zeta_p = \arctan\left(\frac{x_\epsilon - x_{\epsilon-1}}{z_\epsilon - z_{\epsilon-1}}\right)
+\end{equation}
+Then the corss-track error is calculated by projecting the positional error onto the normal of the path
+\begin{equation}
+    x_e = (x - x_\epsilon)\cos\zeta_p - (z - z_\epsilon)\sin\zeta_p
+\end{equation}
+Finally the LOS steering correction is calculated according the LOS steering law 
+\begin{equation}
+    \theta_r = \zeta_p + \arctan\left(\frac{-x_e}{\Delta}\right)
+\end{equation}
+This pitch angle is updated each time new tip coordinates are received from the vision system and passed to the pitch autopilot for control.
+
 
 \paragraph*{Integral-Line-Of-Sight (ILOS)}
-
-
-\subsubsection{Pitch autopilot}
-The pitch autopilot is a closed-loop control system that continuously regulates the pitch of the tip. The autopilot layer consists of three primary components: a pitch angle converter, a feedback controller, and a tension converter. Together, these components transform the LOS heading reference into actuator-level tendon tension setpoints.
+To improve robustness against steady-state path following errors, and ILOS extension of the LOS was implemented in the same \texttt{LineOfSight} class. The ILOs method uses the same core logic as LOS for computing the tangential path angle \(\zeta_p\) and cross-track error \(x_e\), but integrates the cross-track error over time to form an additional correction term. On each call, the integration is updated as:
+This integral term is updated in discrete time based on the elapsed time \(\Delta t\) between two consecutive calls:
+\begin{equation}
+x_{e,\text{int}}[k] = x_{e,\text{int}}[k-1] + x_e[k] \cdot \Delta t
+\end{equation}
+To ensure numerical stability, this accumulated error is clamped between predefined bounds:
+\begin{equation}
+x_{e,\text{int}}[k] = \text{clamp}\left(x_{e,\text{int}}[k], x_{\text{min}}, x_{\text{max}}\right)
+\end{equation}
+The final pitch reference angle is then computed using the ILOS steering law:
+\begin{equation}
+    \theta_r = \zeta_p + \arctan\left(\frac{-x_e - K_i \cdot x_{e,\text{int}}}{\Delta}\right)
+\end{equation}
+Where the integral gain \(K_i\) is a design parameter.
 
 \subsubsection{Pitch converter}
+The pitch autopilot is a closed-loop control system that continuously regulates the pitch of the tip. The autopilot layer consists of three primary components: a pitch angle converter, a feedback controller, and a tension converter. Together, these components transform the LOS heading reference into actuator-level tendon tension setpoints.
+
 The first step in the autopilot is estimating the measured pitch angle, \(\theta_{meas}\), from vision data. This is simply done by computing the angle between the z-axis and the 3D direction vector defined by the detected tip and pre-tip positions. 
 \begin{equation}
     \theta_{meas} = atan2(\vec{d}_x,\vec{d}_z)
@@ -467,10 +510,19 @@ The ramping region spans the end of the current segment and the beginning of the
 
 
 \subsubsection{Ribbon Adapter}
-The control system also includes a \texttt{RibbonAdapter} that translates desired curvature commands from the feedback controller into the appropriate control variable \(u_{d,fb}\) for the specific ribbon device. This adaptation accounts for the individual curvature-tension characteristics of each ribbon. This conversion is based on the "air calibration" procedure described in the methods section, which establishes the realationship between applied differential tension and resulting tip curvature for the given ribbon. The conversion uses the experimentally determined slope and offset parameters that capture the ribbons mechanical response:
+The control system also includes a \texttt{RibbonAdapter} that translates desired curvature commands from the feedback controller into the appropriate control variable \(u_{d,fb}\) for the specific ribbon device. This adaptation accounts for the individual curvature-tension characteristics of each ribbon. This conversion is based on the "air calibration" procedure described in the methods section, which establishes the realationship between applied tendon actuation and resulting tip curvature for the given ribbon. The conversion uses the experimentally determined slope and offset parameters that capture the ribbons mechanical response via fitting one horizontal segment for the deadzone and two linear slopes:
 \begin{equation}
 u = \frac{|\kappa_{output}| - \text{Offset}}{\text{Slope}}
 \end{equation}
+Once the calibration protocol described in the methods is finished and the user has a figure such as \ref{fig:curvaturevstension}, the user needs to put in the values of the the slopes and offset for the left and right as well as the pre-curvature value of the ribbon, represented by the horizontal line into the . 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{gui}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+
 Then the controlvariable is given the same sign as the curvature to maintain the correct bending direction, with positive values corresponding to rightward deflection and negative values to leftward deflection.
 \newline \newline
 The output of the controller is a scalar actuation variable that represents the differential tension required between the left and right tendon groups. This value is later converted into explicit tendon tension setpoints in the next stage of the autopilot
