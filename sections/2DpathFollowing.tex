@@ -667,10 +667,17 @@ Figure \ref{fig:ILOStwocurves} shows that the ILOS guidance system performs with
 
 \subsection{Discussion}
 
+\subsubsection{Ribbon Adaptation}
+While the ribbon adaption method significantly improves performance, it does not perfectly capture the ribbon's true behavior. First, the characterization is done in air (for the reasons outlined in the design section). Second, the ribbon has a very distinct hysteresis effect that is not explicitly modeled. The hysteresis loop shows that the dynamics cannot in reality be modeled using a single-valued function. Although the fitted model still uses a simplified three-segment piecewise function, the actual system depends on the history of previous states. This has implications for control accuracy, particularly during rapid or alternating actuation cycles.
+\newline \newline
+This imperfect adaptation also leads to the need for slight adjustments to the PI gains (for optimal performance) for the right and left pitch feedback control to adapt it to the ribbon. Before implementing the ribbon adaptation module, this tuning process was very time-consuming and absolutely essential for acceptable performance. With the adaptation module, one can achieve acceptable performance without re-doing the tuning, but tweaking for each ribbon will lead to better performance. The results presented above were obtained after making minor adjustments to the default PI values to tailor to that ribbon. Ideally, such manual tuning would be unnecessary if the ribbon dynamics were more consistent or if the ribbon adaptation method fully captured all relevant behaviors.
+\newline \newline 
+Additionally the observations made with regards to the affects of water and gelatin also suggests that tendon lubrication is essential. Without it, friction within the tendon channels likely prevents smooth tendon motion, resulting in impaired bending. As a result, it should be standard practice to dip the ribbon in water before each calibration or experiment.
+
 \subsubsection{Open-Loop Performance}
 The results for straight path following show that the open-loop system performs poorly, as expected. Without feedback, the inherent pre-curvature of each ribbon causes significant drift,. This is because small deviations in expected tip curvature accumulate over the insertion distance in gelatin leading to large errors in position
 \newline \newline
-Similarly, for curved paths, the open-loop system applies feedforward actuation values determined during charactarization on a different ribbon. Since each ribbon's dynamics differ significantly this likely led to the poor performance seen in figure \ref{fig:curvedol}. These results clearly demonstrate that feedback is essential, even when thorough charactarization has been performed.
+Similarly, for curved paths, the open-loop system applies feedforward actuation values determined during charactarization on a different ribbon. Since each ribbon's dynamics differ significantly this likely led to the poor performance seen in figure \ref{fig:curvedol}. These results clearly demonstrate that feedback is essential, even when thorough characterization has been performed.
 
 \subsubsection{LOS Performance}
 The LOS guidance system is, from the results, a huge improvement over open-loop control, reducing drift and maintaining stable, low tracking errors (<0.4mm) in both straight and curved paths. This also validates the modeling the ribbon's behavior to be similar to that of vessel. It is also worth noting that the path seen in figure \ref{fig:curvedcl} pushes the limits of what that ribbon is capable of according to its dynamics identified in air. This path includes segments that have curvatures which are the  maximum curvatures that this ribbon can achieve in air, making such accurate tracking especially impressive.
@@ -684,62 +691,27 @@ The ILOS controller outperforms the traditional LOS with tracking errors reamini
 
 \subsubsection{Final Performance Compared to Other Neurosurgical Methods}
 The ILOS straight line performance of 0.08mm \(\pm \) 0.04mm error and 0.08mm \(\pm\) 0.06mm error during curved line following (after compensating for the inital intentional offset) is an extremely high level of accuracy. Comparing with the state of the art closed-loop methods duty cycle needle steering was reported to have an accuracy of 0.71mm when simulated in a kidney phantom \cite{wood_needle_2010}, this was notably however using much more lenient curvatures (max 0.003mm\(^{-1}\)) \cite{wood_needle_2010} compared to the path tested here (0.022mm\(^{-1}\)). An even closer comparison would be to that of closed-loop control of programmable bevel-tip needle in a gelatin brain phantom, where the accuracy is reported to be 0.68mm \(\pm\)1.45mm, with again much smaller curvatures of 0.0056mm\(^{-1}\) \cite{ko_closed-loop_2011}, thus the accuracy of the ILOS system is roughly an order of magnitude better than these methods. 
-\newline \newline
-According to a review on flexible needles published in 2023 which surveys 131 articles \cite{lu_flexible_2023} the best reported performance is 0.3mm \cite{hong_magnetic_2021} in a brain phantom. For a comparison of the performance see figure  A very low error, but also over three times that of this system, proving the effectiveness of the novel ILOS-based approach which also has the benefit of necessitating much less exact modeling compared to these other systems. 
-
-\begin{figure}
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\linewidth]{per}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \includegraphics[width=0.95\linewidth]{images/pathfollowing/performanceCompared4.png}
+    \caption{Figure adapted from \cite{lu_flexible_2023} showing the performance of current studies of flexible needle steering, compared to the performance of this system using ILOS}
+    \label{fig:performanceCompared}
 \end{figure}
-
-
-In a clinical context, stereotactic neurosurgical guidance systems, such as those used for deep brain stimulation electrode placement, typically report targeting accuracies between 0.6mm and 1.3mm \cite{zacest_precision_2009}, \cite{rajabian_accuracy_2022}, \cite{moser_measurement_2012}, which is generally accepted as sufficient for safe and effective procedures within the brain. Frame-based stereotaxy remains the gold standard with sub millimeter accuracy reported but rarely below 0.3-0.5mm in practice \cite{roth_accuracy_2018}.
+According to a review on flexible needles published in 2023 which surveys 131 articles \cite{lu_flexible_2023}.For a comparison of the Ribbon ILOS performance and all reported steerable needle performance see figure \ref{fig:performanceCompared}. The best reported performance in that review is that of a magnetically steered needle that acheives a 0.3mm accuracy in a brain phantom \cite{hong_magnetic_2021}.  A very low error, but also over three times that of this system, proving the effectiveness of the novel ILOS-based approach which also has the benefit of necessitating much less exact modeling compared to these other systems. 
 \newline \newline
-Although testing remains to be done in vitro, and more thorough randomized testing should be done in gelatin the 0.08mm accuracy indicates that the ILOS closed loop design and the ribbon device may have the potential to surpass existing clinical standards of accuracy.
+In a clinical context, stereotactic neurosurgical guidance systems, such as those used for deep brain stimulation electrode placement, typically report targeting accuracies between 0.6mm and 1.3mm \cite{zacest_precision_2009}, \cite{rajabian_accuracy_2022}, \cite{moser_measurement_2012}, which is generally accepted as sufficient for safe and effective procedures within the brain. In most operations however 2-3mm errors are tolerated by most surgical needle placement procedures, and manual placement error is approximately 3-5mm \cite{rucker_sliding_2013}. Frame-based stereotaxy remains the gold standard with sub millimeter accuracy reported but rarely below 0.3-0.5mm in practice \cite{roth_accuracy_2018}.
+\newline \newline
+Although testing remains to be done in vitro, and more thorough randomized testing should be done in gelatin the 0.08mm accuracy strongly suggests that the ILOS closed-loop design and ribbon device have the potential to not only surpass the current state-of-the-art in needle steering, but also to outperform manual methods and possibly approach or exceed the gold standard of frame-based stereotaxy in clinical accuracy.
 
 
 
-
-\subsubsection{Ribbon Adaptation}
-This results in a hysteresis loop that cannot be modeled using a single-valued function. While the fitted model still uses a simplified three-segment piecewise function (as described earlier), users must be aware that the actual system response includes history-dependent effects. This has implications for control accuracy, particularly during rapid or alternating actuation cycles.
-
-The immediate recovery of expected curvature–tension behavior suggests that tendon lubrication is essential. Without it, friction within the tendon channels likely prevents smooth tendon motion, resulting in impaired bending. As a result, it is now standard practice to hydrate the ribbon before each calibration or experiment.
-
-
-\subsubsection{Closed-Loop Design}
-This modular and layered control structure supports accurate and smooth path following, while being modular and scalable. 
-
-
-
-
-
-\subsubsection{Pitch Tracking}
-
-
-\subsubsection{LOS Path-Following}
-
-
-
-\subsubsection{ILOS Path-Following}
-
-This pre-computation approach ensures that the control system can anticipate required actuations rather than simply reacting to tracking errors. 
-
-The pre-computed path should be possible to follow by the ribbon
-
-This ribbon-specific adaptation ensures that the curvature commands produce the intended mechanical response regardless of individual device variations in stiffness, tendon routing, or assembly tolerances. The characterization-based approach allows the control system to compensate for these variations, improving the accuracy and consistency of curvature control across different ribbon assemblies and enabling precise path-following performance.
-
-The 2D path comparison shows an almost perfect match between the actual and target paths, with negligible deviation. These results demonstrate that ILOS guidance provides precise and robust performance in straight-line tracking, benefiting from incremental corrections and a smoother control response.
 
 
 \subsection{Future Development}
-
-\subsubsection{Pitch conversion improvements}
-
-\subsubsection{Adaptation based on Path Curvature}
+Although the performance is 
 
 \subsubsection{Further Ribbon Adaptation}
+
 
 \subsubsection{Future Hardware Iterations}
 
