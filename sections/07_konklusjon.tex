@@ -3,10 +3,21 @@
 %                           Start Document
 %=================================================================
 \setstretch{1.6}
-\sectiontitle{10}{Conclusion and Reflections}
-\lhead{Conclusion and Reflections} % section header
-
-
+\sectiontitle{10}{Conclusion}
+\lhead{Conclusion} % section header
+This thesis presented the design, implementation and validation of a closed-loop navigation system for a flexible, ribbon-shaped steerable device intended for precise navigation in soft tissue such as the brain. This system integrates a real-time tip-tracking vision system, path planning, a robust closed-loop tendon tension control, pitch control and and a novel application of Integral Line-Of-Sight (ILOS) guidance for 2D path-following. All implemented within a modular and scalable software framework.
+\newline \newline
+A central question for this work was how a highly deformable device navigating in a soft medium could be effectively modeled and controlled. What this thesis hypothesized was that its control could be inspired by conventional vehicle systems, despite its nonlinearities, hysteresis and interaction with soft materials. It has now been demonstrated that with a careful combination of simplified kinematic modeling, a layered control system with feedback control and curvature-based guidance, this is indeed possible. Moreover the other major hypothesis of this thesis, that ILOS guidance, traditionally used in marine and aerial domains, could be adapted for such a system has also been validated. The ILOS approach has proven remarkably effective at eliminating errors and providing the adaptability and robustness necessary for operation in unpredictable soft-tissue environments.
+\newline \newline
+There is however still future work be done. The ribbon device exhibits high variability and strong history-dependent behavior that cannot be fully captured by simple models. Some manual tuning of control parameters is still required, the vision-based feedback is notably noisy and the current path planning does not fully take into account the physical constraints of the device.
+\newline \newline
+Nonetheless, the performance achieved is remarkably good. The system demonstrated a mean path following errors as low as 0.08mm in both straight and curved trajectories. This level of precision is three times better than that of the best performing flexible needle. Knowing that the manual placement error is approximately 3-5mm \cite{rucker_sliding_2013} this device also has the potential to vastly outperform manual methods and possibly approach the gold standard of frame-based stereotaxy in clinical accuracy. Although future tests need to be made to explore this.
+\newline \newline
+Looking ahead the control strategy can be extended to 3D navigation by incorporating twisting maneuvers through staged control strategies. There is also work to be done on make the device more consistent and robust, and future iterations may benefit from online adaptation or more accurate ribbon adaptation. However the software platform was built with such expansions in mind, and should provide a solid foundation for these future improvements.
+\newline \newline
+In a broader perspective, this thesis aims to contribute to the development of minimally invasive, highly accurate, and automated tools that could one day reach regions of the brain and other delicate tissues previously considered inoperable. Systems like this also have potential to make such procedures more accessible worldwide. Every year, it is estimated that over 5 million patients do not receive the neurosurgical care they need, often due to a lack of expertise or resources. By reducing reliance on highly specialized manual skills and shifting more toward automation and intelligent guidance systems, technologies like this could help bridge that gap. 
+\newline \newline
+I am personally very grateful to have had the opportunity to develop this system and have thoroughly enjoyed the process of working on this thesis. I sincerely hope this work will be continued, and that a future iteration may one day be used to help patients in a clinical setting.
 
 %=================================================================
 %                           End Document
