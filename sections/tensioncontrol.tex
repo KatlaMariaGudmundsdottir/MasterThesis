@@ -1,4 +1,4 @@
-\setstretch{1.6}
+\setstretch{1.4}
 \sectiontitle{6}{Closed-Loop Tension Control}
 \lhead{Closed-Loop Tension Control} % section header
 As mentioned in the project context a form of closed-loop control of the tendon tensions was already implemented before the start of this thesis. However that implementation had several issues, including large steady state error up to 100mN, and difficulty in tracking the setpoints when while the linear stage was moving, thereby creating large over- and undershoots in tension. There were also issues in the implementations of the GUI leading the setpoint to be set to zero before being set to the desired setpoint decided by the user. Therefore it was necessary to rework this closed-loop tension control in order to ensure that later navigational control that would be implemented on top of this inner closed loop would function in the intended manner.
@@ -41,8 +41,8 @@ The \texttt{LinearStageController} class was implemented by adapting C++ example
 
 
 \subsection{Design}
+A figure depicting the overall design of clos
 
-\todo{figure of the closed loop for tendon tension}
 
 
 \lhead{Closed-Loop Tension Control - Implementation} % section header

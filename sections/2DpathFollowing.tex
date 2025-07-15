@@ -1,4 +1,4 @@
-\setstretch{1.6}
+\setstretch{1.4}
 \sectiontitle{6}{2D Path following}
 \lhead{2D Path following} % section header
 This final section describes how 2D path following was achieved for the ribbon robot. It begins with an analysis of some relevant literature, it then describes the kinematic model designed for the system and the control systems final design, which combines all the components described in previous chapters as well as a closed-loop pitch control and Integral-Line-Of-Sight (ILOS) guidance system. The implementation of these two last components is then explained as well as the device-specific adaptation method implemented due to differences in device dynamics. This all finally enables real-time following of preset paths through the brain phantom, the results of which are presented and discussed. The final subchapter then discusses some possible future developments.
@@ -580,15 +580,10 @@ To address this, the ribbon was cleaned by soaking it in heated, distilled water
 \paragraph*{Effect of Dry Tendons}
 A similar, yet less severe, degradation in curvature response was observed when the ribbon was completely dry. In this case, the tendons exhibited highly non-linear behavior with limited curvatures, even at high actuation values. This issue was however simply resolved by dipping the ribbon in water prior to calibration. This led to an immediate recovery of the expected curvature-tension behavior.
 
-
-
-\subsubsection{Pitch Tracking}
-\todo{write section?}
-
-\subsection{Straight Line: Comparing the 3 Guidance Systems}
+\subsubsection{Straight Line: Comparing the 3 Guidance Systems}
 To compare the performance of the Open-Loop, LOS and ILOS guidance systems, a simplest scenario experiment was made where the ribbon was commanded to follow a straight line through the brain phantom. This controlled scenario was mainly intended to evaluate the system's  tracking accuracy and drift characteristics.
 
-\subsubsection{Open-Loop Straight Line "following"}
+\paragraph*{Open-Loop Straight Line "following"}
 Figure \ref{fig:straighol} shows that the open-loop system, which in the case of a straight line applies a constant neutral tension of 100mN on all tendons, fails to maintain accurate path tracking. The error increases steadily over time, a visible drift, with a maximum error of 2.54mm and a mean error of 1.18mm. 
 \begin{figure} [H]
     \centering
@@ -598,7 +593,7 @@ Figure \ref{fig:straighol} shows that the open-loop system, which in the case of
 \end{figure}
 
 
-\subsubsection{LOS Straight Line Following}
+\paragraph*{LOS Straight Line Following}
 The LOS guidance system demonstrates a significant improvement (see figure \ref{fig:straightLOS})  over the open-loop. The maximum error is reduced to 0.35mm, over 2mm less that the open loop scenario. The mean error is 0.14mm and the tracking error remains relatively stable and low throughout the trajectory. Although a slight increase in error occurs toward the end of the trajectory, the system is able to correct its heading, removing the issue of drift.  
 \begin{figure} [H]
     \centering
@@ -608,7 +603,7 @@ The LOS guidance system demonstrates a significant improvement (see figure \ref{
 \end{figure}
 
 
-\subsubsection{ILOS Straight Line Following}
+\paragraph*{ILOS Straight Line Following}
 The ILOS controller achieved the highest tracking precision. As seen in figure \ref{fig:straightILOS} the mean tracking error is only 0.08mm with a maximum error of 0.2mm. The error also remains consistent and does not show signs of significant drift.
 \begin{figure}[H]
     \centering
@@ -618,10 +613,10 @@ The ILOS controller achieved the highest tracking precision. As seen in figure \
 \end{figure}
 
 
-\subsection{Path 1: Comparing Open-Loop and Closed-Loop}
+\subsubsection{Path 1: Comparing Open-Loop and Closed-Loop}
 To evaluate the performance of open-loop versus closed-loop control on a more complex trajectory, where the open-loop applies not just neutral tension but the same feedforward tensions used in the closed-loop case, both systems were tested on a curved path through the brain phantom. This path has straight segments as well as two different curvature segments, making it a lot more challenging than the straight-line scenario.
 
-\subsubsection{Open-Loop Path-Following}
+\paragraph*{Open-Loop Path-Following}
 
 As shown in figure \ref{fig:curvedol}, the open-loop guidance system performs poorly when following the curved path. Although the system applies different tensions for every segment that corresponds to the actuation values determined appropriate for those curvature, it reults in a steadily increasing deviation from the target trajectory. There is significant drift leading to a maximum tracking error of 9.44mm, and a mean error of 3.48mm. 
 \begin{figure} [H]
@@ -632,7 +627,7 @@ As shown in figure \ref{fig:curvedol}, the open-loop guidance system performs po
 \end{figure}
 
 
-\subsubsection{Closed-Loop (LOS) Path-Following}
+\paragraph*{Closed-Loop (LOS) Path-Following}
 
 \begin{figure} [H]
     \centering
@@ -642,7 +637,7 @@ As shown in figure \ref{fig:curvedol}, the open-loop guidance system performs po
 \end{figure}
 Figure \ref{fig:curvedcl} shows the effectiveness of the closed-loop LOS controller on the same curved path. The mean error is reduced to 0.17mm, and the maximum error to 0.3mm, a decrease of 9.14mm. 
 
-\subsection{Path 2: Comparing LOS and ILOS}
+\subsubsection{Path 2: Comparing LOS and ILOS}
 In order to test the difference between the LOS and ILOS guidance systems, both were tested on the same two-curvature path. Because the ILOS system is expected to minimize steady state error both ribbons were intentionally started a small distance (0.4mm) away from the starting point of the target path to challenge the two systems ability to correct this initial offset. 
 \subsubsection{LOS Path-Following}
 \begin{figure} [H]
@@ -653,7 +648,7 @@ In order to test the difference between the LOS and ILOS guidance systems, both 
 \end{figure}
 As shown in figure \ref{fig:LOStwocurves}, the LOS controller achieves a tracking with a mean error of 0.24mm. However largely due to the initial starting offset of approximately 0.4mm, there is a noticeable steady-state error of around 0.2mm  that remains throughout the trial. 
 
-\subsubsection{ILOS Path-Following}
+\paragraph*{ILOS Path-Following}
 \begin{figure} [H]
     \centering
     \includegraphics[width=\linewidth]{images/pathfollowing/ILOS/twocurves_250704_153907_2K5i.png}
@@ -699,7 +694,7 @@ The ILOS straight line performance of 0.08mm \(\pm \) 0.04mm error and 0.08mm \(
 \end{figure}
 According to a review on flexible needles published in 2023 which surveys 131 articles \cite{lu_flexible_2023}.For a comparison of the Ribbon ILOS performance and all reported steerable needle performance see figure \ref{fig:performanceCompared}. The best reported performance in that review is that of a magnetically steered needle that acheives a 0.3mm accuracy in a brain phantom \cite{hong_magnetic_2021}.  A very low error, but also over three times that of this system, proving the effectiveness of the novel ILOS-based approach which also has the benefit of necessitating much less exact modeling compared to these other systems. 
 \newline \newline
-In a clinical context, stereotactic neurosurgical guidance systems, such as those used for deep brain stimulation electrode placement, typically report targeting accuracies between 0.6mm and 1.3mm \cite{zacest_precision_2009}, \cite{rajabian_accuracy_2022}, \cite{moser_measurement_2012}, which is generally accepted as sufficient for safe and effective procedures within the brain. In most operations however 2-3mm errors are tolerated by most surgical needle placement procedures, and manual placement error is approximately 3-5mm \cite{rucker_sliding_2013}. Frame-based stereotaxy remains the gold standard with sub millimeter accuracy reported but rarely below 0.3-0.5mm in practice \cite{roth_accuracy_2018}.
+In a clinical context, stereotactic neurosurgical guidance systems, such as those used for deep brain stimulation electrode placement, typically report targeting accuracies between 0.6mm and 1.3mm \cite{zacest_precision_2009}, \cite{rajabian_accuracy_2022}, \cite{moser_measurement_2012}. However 2-3mm errors are tolerated by most surgical needle placement procedures, and manual placement error is approximately 3-5mm \cite{rucker_sliding_2013}. Frame-based stereotaxy remains the gold standard with sub millimeter accuracy reported but rarely below 0.3-0.5mm in practice \cite{roth_accuracy_2018}.
 \newline \newline
 Although testing remains to be done in vitro, and more thorough randomized testing should be done in gelatin the 0.08mm accuracy strongly suggests that the ILOS closed-loop design and ribbon device have the potential to not only surpass the current state-of-the-art in needle steering, but also to outperform manual methods and possibly approach or exceed the gold standard of frame-based stereotaxy in clinical accuracy.
 
@@ -708,15 +703,21 @@ Although testing remains to be done in vitro, and more thorough randomized testi
 
 
 \subsection{Future Development}
-Although the performance is 
 
 \subsubsection{Further Ribbon Adaptation}
-
+One of the main areas for future work is the ribbon adaptation method, this could be changed so that instead of only identifying which tendon actuation should be applied based on the desired curvature, it should also be based on the history, the previous states. This way it could take into account the very pronounced hysteresis effect of the ribbon. Thorough mappings between how the curvature profiles look in air vs gelatin should also be made in order to further validate the current adaptation process.
+\newline \newline
+Another possible avenue for exploration is online adaptation. For example using online model-performance optimization using extremum seeking to tune thi PI gains of the pitch converter \cite{killingsworth_pid_2006}. This would improve the performance without manual retuning and remove the need for an axect ribbon adaptation module.
 
 \subsubsection{Future Hardware Iterations}
+The main limitation of the current system stem from the ribbon devices themselves. The manufacturing leads to inconsistent dynamics between devices. Additionally interaction with gelatin and dust cause further unpredictable changes in curvature performance. A recurring issue has also been tendon breakage. However this was significantly improved by regular cleaning and ripping the ribbon in water prior to actuation.
+\newline \newline 
+Achieveing robust control remains challenging due to the variation in dynamics. Therefore future work should aim improving the consistency and durability of the ribbon devices. Currently there is already a project underway to miniaturize the device, further expanding its potential.
 
 \subsubsection{Extension to 3D PathFollowing}
-
+A final major avenue for future work is the extension to 3D path following. Due to time constraints and the unexpectedly broad scope of tasks during this thesis, it was decided that achieving robust 2D control should be prioritized over attempting a 3D implementation. However, the ribbon’s capability for both twisting and bending maneuvers makes 3D control a natural next step.
+\newline \newline
+One approach is to draw inspiration from fixed-wing aircraft control or bank-to-turn strategies. Since the ribbon cannot simultaneously twist and bend, a control strategy could involve incorporating twisting into the planned path. A dedicated ILOS-based controller could be used to track the ribbon's twist angle, reorienting the bending plane to ensure that the path points lie withing the reachable 2D plane. Once the plane is aligned through twisting, a separate ILOS controller, the 2D controller developed for this thesis can handle the bending control withing that plane to follow the desired path. Since bending and twisting will not happen simultaneously one could switch between these modes control based on the pre-planned path and the observed errors. This staged control, alternating between twisiting and bending and combining it with ILOS may offer a promising path toward full 3D trajectory following.
 
 
 

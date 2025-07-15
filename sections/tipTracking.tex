@@ -1,4 +1,4 @@
-\setstretch{1.6}
+\setstretch{1.4}
 \sectiontitle{6}{Tip Tracking Integration}
 \lhead{Tip Tracking Integration} % section header
 As mentioned in the project context an algorithm for capturing and processing the images from the cameras has already been developed by a previous student. This code was written in python and its aim was to deduce the position and direction of the tip of the ribbon while it moves in the brain phantom effectively "Tip Tracking". However, this code had not been developed for real-time use, but rather post-processing of videos.  Therefore it had to be refactored and somewhat rewritten for this project. Since the tip data acquired by this algorithm was then to be used in the closed-loop path following control system, it was also necessary to develop a method of sharing this data in real time with the C++ control system developed in Qt. This section therefore details the refactoring and communication implementation necessary to allow for live vision-feedback.
