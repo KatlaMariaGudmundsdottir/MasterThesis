@@ -50,14 +50,17 @@ The results of the path planning integration can be seen in figure \ref{fig:wayp
 
 \subsection{Discussion}
 \subsubsection{Path Planning Algorithm Limitations}
-
-A key limitation , of the the current path planning algorithm when applied to this system is that the planned paths consist of discrete constant-curvature segments joined together, resulting in a continuous path, but non-differentiable curvature profile. In reality, the ribbon cannot switch instantly between different curvatures, these transistions require phsycial deformation over time and space. 
+A key limitation , of the the current path planning algorithm when applied to this system is that the planned paths consist of discrete constant-curvature segments joined together, resulting in a continuous path, but non-differentiable curvature profile. In reality, the ribbon cannot switch instantly between different curvatures, these transistions require physical deformation over time and space. 
 As such, future iterations of the path planning could aim to generate continuously differentiable curvature profiles, potentially by incorporating splines or smooth curvature interpolation methods \cite{fossen_handbook_2011}. This would better reflect the true kinematic capabilities of the device and enable more physically plausible and smoother motions.
 \newline \newline
 Implementing such improvements was unfortunately beyond the scope of this thesis, where the aim was merely to follow the given paths as closely as possible. However, incorporating more physically realistic curvature transition would certainly improve the overall performance of the system and should likely be prioritized in later iterations of the system.
 
+
+
 \subsubsection{Future Work}
 Further work could also explore real-time path re-planning based on the current position and orientation of the ribbon and its observed curving capabilities. Not all ribbons exhibit identical curvature capabilities and therefore adaptive re-planning could be an interesting way to compensate for that fact.
+\newline \newline
+Even if real-time path planning is not implemented, it would still be valuable to generate paths that account not only for minimizing stress on the brain tissue but also for the curvature dynamics of the ribbon being used, particularly its maximum achievable curvature. Incorporating this information, along with differentiable curvature profiles, would ensure that the planned paths are not only optimal but also feasible to execute.
 
 \subsection{Conclusion}
 The integration of the existing path planning algorithm was done successsfully using a modular approach such that paths can easily be updated or switched out. By passing precomputed path to the \texttt{PathProcessing} module, the system can now follow optimized trajectories while keeping the path logic decoupled from the runtime control. This solution meets the goals of the thesis: enabling path following based on the provided algorithm.
