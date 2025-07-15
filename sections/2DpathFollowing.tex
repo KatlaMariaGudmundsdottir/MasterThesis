@@ -660,7 +660,7 @@ As shown in figure \ref{fig:LOStwocurves}, the LOS controller achieves a trackin
     \caption{ILOS path-following performance on a curved path with a small starting offset}
     \label{fig:ILOStwocurves}
 \end{figure}
-Figure \ref{fig:ILOStwocurves} shows that the ILOS guidance system performs with higher precision an better convergence. The mean error is reduced to 0.11mm mostly due to the systems ability to eliminate the the steady-state error visible in the LOS system. The 2D path comparison shows a nearly perfect alignment between the actual and target paths after an initial period of convergence because of the initial offset.
+Figure \ref{fig:ILOStwocurves} shows that the ILOS guidance system performs with higher precision and better convergence. The mean error is reduced to 0.11mm mostly due to the systems ability to eliminate the the steady-state error visible in the LOS system. The 2D path comparison shows a nearly perfect alignment between the actual and target paths after an initial period of convergence because of the initial offset.
 
 
 
@@ -668,17 +668,39 @@ Figure \ref{fig:ILOStwocurves} shows that the ILOS guidance system performs with
 \subsection{Discussion}
 
 \subsubsection{Open-Loop Performance}
+The results for straight path following show that the open-loop system performs poorly, as expected. Without feedback, the inherent pre-curvature of each ribbon causes significant drift,. This is because small deviations in expected tip curvature accumulate over the insertion distance in gelatin leading to large errors in position
+\newline \newline
+Similarly, for curved paths, the open-loop system applies feedforward actuation values determined during charactarization on a different ribbon. Since each ribbon's dynamics differ significantly this likely led to the poor performance seen in figure \ref{fig:curvedol}. These results clearly demonstrate that feedback is essential, even when thorough charactarization has been performed.
 
-We see in the results section on straight path performance that the Open loop performance is very poor as expected the lack of feedback leads to a serious drift even for a simple task as gaing down a straight path. This is largely due to the face that every ribbon has a certain pre-curvature, meaning the curvature the ribbon has when all tendon tensions are neutral (100mN) with such device inaccuracies and no feedback this inevtibaly leads to poor performance. Even though these pre-curvatures could be minimized in future iterations of the device manufacturing this would likely still be an issue since any small deviation from the expected curvature at the tip will accumulate over the distance of the path, since in gelatin a small curvature of the tip on entry will lead to a large total change in angle and position at the end of the insertion
+\subsubsection{LOS Performance}
+The LOS guidance system is, from the results, a huge improvement over open-loop control, reducing drift and maintaining stable, low tracking errors (<0.4mm) in both straight and curved paths. This also validates the modeling the ribbon's behavior to be similar to that of vessel. It is also worth noting that the path seen in figure \ref{fig:curvedcl} pushes the limits of what that ribbon is capable of according to its dynamics identified in air. This path includes segments that have curvatures which are the  maximum curvatures that this ribbon can achieve in air, making such accurate tracking especially impressive.
+\newline \newline
+However LOS exhibits small steady-state offsets, particularly when starting from a misaligned position as in \ref{fig:LOStwocurves}. This can be partly attributed to variations in the mechanical properties of the gelatin phantom, and unmodeled kinematic attributes of the ribbon such as its hysteresis. If the medium is stiffer than expected or the tendon actuation does not produce the anticipated tip curvature, small deviations can accumulate into steady-state errors that traditional LOS cannot fully correct. This is  analogous to how a boat following a planned course with LOS will experience a steady-state error if subjected to unexpected current, since LOS cannot correct for such external factors. This was however an expected result and was why ILOS was hypothesized to be a better alternative for the system.
 
-We also see that in the curved path following where the open-loop system applies the feedforward actuation values determeined during the charactarization process that was done where a ribbon was inserted several times into the gelatin at constant tension actuation values. This was notably though done on a different ribbon. As discussed in the motivation on ribbon adaptation, there is a very significant difference in dynamics between the ribbons. This may have lead to the poor results seen in \ref{fig:curvedol} where the ribbon begins by curving too much towards the left and because of the lack of feedback this mistake then accumulates to the large error of 9mm. This shows that the feedback is necessary even though a thorough charactarization has been done on one ribbon.
+\subsubsection{Final (ILOS) Path-Following Performance}
+The use of ILOS guidance for this application is as far as the author knows is the first use of this type of guidance system for a continuous device and therefore represents a novel approach to path following. While ILOS is typically applied in marine and aerial robotics to compensate for environmental disturbances, its adaptation here to navigation in soft brain-like tissue in order to compensate for modeling inaccuracies and varying stiffness's is clearly a successful approach. And one it could expect it to be even more important to have the integral term in a more heterogeneous medium than the brain phantom used here, such as the real brain.
+\newline \newline
+The ILOS controller outperforms the traditional LOS with tracking errors reamining consistently below 0.15mm, even in curved trajectories and with intentional initial offsets. The system integral term is clearly successfull in eliminating the small steady-state errors observed with LOS. 
+
+\subsubsection{Final Performance Compared to Other Neurosurgical Methods}
+The ILOS straight line performance of 0.08mm \(\pm \) 0.04mm error and 0.08mm \(\pm\) 0.06mm error during curved line following (after compensating for the inital intentional offset) is an extremely high level of accuracy. Comparing with the state of the art closed-loop methods duty cycle needle steering was reported to have an accuracy of 0.71mm when simulated in a kidney phantom \cite{wood_needle_2010}, this was notably however using much more lenient curvatures (max 0.003mm\(^{-1}\)) \cite{wood_needle_2010} compared to the path tested here (0.022mm\(^{-1}\)). An even closer comparison would be to that of closed-loop control of programmable bevel-tip needle in a gelatin brain phantom, where the accuracy is reported to be 0.68mm \(\pm\)1.45mm, with again much smaller curvatures of 0.0056mm\(^{-1}\) \cite{ko_closed-loop_2011}, thus the accuracy of the ILOS system is roughly an order of magnitude better than these methods. 
+\newline \newline
+According to a review on flexible needles published in 2023 which surveys 131 articles \cite{lu_flexible_2023} the best reported performance is 0.3mm \cite{hong_magnetic_2021} in a brain phantom. For a comparison of the performance see figure  A very low error, but also over three times that of this system, proving the effectiveness of the novel ILOS-based approach which also has the benefit of necessitating much less exact modeling compared to these other systems. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{per}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+
+In a clinical context, stereotactic neurosurgical guidance systems, such as those used for deep brain stimulation electrode placement, typically report targeting accuracies between 0.6mm and 1.3mm \cite{zacest_precision_2009}, \cite{rajabian_accuracy_2022}, \cite{moser_measurement_2012}, which is generally accepted as sufficient for safe and effective procedures within the brain. Frame-based stereotaxy remains the gold standard with sub millimeter accuracy reported but rarely below 0.3-0.5mm in practice \cite{roth_accuracy_2018}.
+\newline \newline
+Although testing remains to be done in vitro, and more thorough randomized testing should be done in gelatin the 0.08mm accuracy indicates that the ILOS closed loop design and the ribbon device may have the potential to surpass existing clinical standards of accuracy.
 
 
 
-
-
-\subsubsection{Closed-Loop Design}
-This modular and layered control structure supports accurate and smooth path following, while being modular and scalable. 
 
 \subsubsection{Ribbon Adaptation}
 This results in a hysteresis loop that cannot be modeled using a single-valued function. While the fitted model still uses a simplified three-segment piecewise function (as described earlier), users must be aware that the actual system response includes history-dependent effects. This has implications for control accuracy, particularly during rapid or alternating actuation cycles.
@@ -686,26 +708,19 @@ This results in a hysteresis loop that cannot be modeled using a single-valued f
 The immediate recovery of expected curvature–tension behavior suggests that tendon lubrication is essential. Without it, friction within the tendon channels likely prevents smooth tendon motion, resulting in impaired bending. As a result, it is now standard practice to hydrate the ribbon before each calibration or experiment.
 
 
+\subsubsection{Closed-Loop Design}
+This modular and layered control structure supports accurate and smooth path following, while being modular and scalable. 
+
+
+
+
 
 \subsubsection{Pitch Tracking}
-
-\subsubsection{OpenLoop}
- The 2D path comparison illustrates significant deviation from the target path, especially toward the end. The system failed to correct for accumulated drift due to the lack of feedback, highlighting the limitations of open-loop operation in precision tasks.
-
-pre-curvature
-
-This continuous drift demonstrates the limitations of open-loop control in scenarios requiring precision, as there is no feedback to correct deviations.
 
 
 \subsubsection{LOS Path-Following}
 
-The tracking error remained relatively stable and low throughout the trajectory, with a minor increase near the end. The 2D path closely follows the desired straight line, indicating effective corrective behavior through LOS feedback, though some delay in response is evident.
 
- Although a slight increase in error occurs toward the end of the trajectory, the system is able to correct itself afterward, indicating effective use of feedback for error compensation.
-
- These results highlight the importance of feedback in achieving accurate and robust path-following in complex trajectories.
-
- suggesting that the system does not fully converge to the target path but instead follows a nearby offset trajectory. The 2D path comparison confirms that although the path shape is followed well, the ribbon consistently tracks slightly to the side of the intended path.
 
 \subsubsection{ILOS Path-Following}
 
@@ -726,6 +741,7 @@ The 2D path comparison shows an almost perfect match between the actual and targ
 
 \subsubsection{Further Ribbon Adaptation}
 
+\subsubsection{Future Hardware Iterations}
 
 \subsubsection{Extension to 3D PathFollowing}
 
