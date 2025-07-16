@@ -41,13 +41,18 @@ The \texttt{LinearStageController} class was implemented by adapting C++ example
 
 
 \subsection{Design}
-A figure depicting the overall design of clos
-
+A figure depicting the overall design of closed loop tendon tension control can be seen in figure \ref{fig:tensioncontrol}.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/tensioncontrol.png}
+    \caption{Control diagram for the closed loop tension control.}
+    \label{fig:tensioncontrol}
+\end{figure}
 
 
 \lhead{Closed-Loop Tension Control - Implementation} % section header
 \subsection{Implementation}
-\todo{Write small section syaing this section details the implementation of the boxes in the closed loop tendon tension control}
+The folowing section goes through the modules depicted in figure \ref{fig:tensioncontrol} one by one and explains their implementation in the control system.
 
 \subsubsection{Brushless Motor Speed Controller}
 Since the inner controller is a speed controller and could not be recongifured for torque control, the solution was to instead optimize the system around its limitations. This involved selecting the best parameters for the inner speed controller to ensure that it responds as quickly as possible. This turned out to be the values provided by Faulhaber as default values. 
