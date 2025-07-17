@@ -199,14 +199,51 @@ This appendix outlines the step-by-step procedure required to run the Ribbit sys
 
 \end{longtable}
 
-\lhead{Appendix D: Vision System Sequence Diagram} % section header
-\section{Vision System Sequence Diagram}
+\lhead{Appendix D: Vision System Sequence Diagrams} % section header
+\section{Vision System Sequence Diagrams}
 \begin{figure} [H]
     \centering
     \includegraphics[width=1.1\linewidth]{images/vision/pythonSequencediag.png}
     \caption{Sequence diagram of Python Tip detection code}
     \label{fig:seqpython}
 \end{figure}
+\newpage
+
+\lhead{Appendix E: Vision System Sequence Diagram} % section header
+\section{Tip Tracking Integration Theory: Types of Communication Protocols}
+
+There are several ways to establish a communication layer that allows real-time data transfer between two programs, often referred to as InterProcess Communication (IPC). Below is a brief analysis of each relevant method.
+
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=1.1\linewidth]{images/Software documentation/visionSequencediag.png}
+    \caption{Sequence diagram of the communication between python vision system and Qt control system}
+    \label{fig:seqComm}
+\end{figure}
+
+
+\paragraph*{File-based communication}
+The simplest solution in terms of implementation is file based communication. One system would for each data point write to a file which is subsequently read by the receiving system. This requires the receiving system to continuously monitor the file for updates introducing latency that is further exacerbated by file system access times and disk I/O overhead. 
+
+In terms of fault tolerance, file-based communication has the benefit of data persisting even if a process crashes, however it is not designed for high-frequency updates \cite{gray_interprocess_2003}. Race conditions can occur if both the vision and control systems attempt to access the file simultaneously. Locking mechanisms can mitigate this, but at the cost of further increasing latency \cite{gray_interprocess_2003}. 
+
+\paragraph*{Shared memory}
+A significantly faster method is shared memory. Shared memory allows multiple processes to access a common memory space, enables rapid data exchange without the overhead of disk I/O or network communication. However it also introduces concurrency and data consistency challenges. \cite{gray_interprocess_2003}
+
+Since multiple processes may attempt to read and write simultaneously, synchronization mechanisms such as mutexes or semaphores are required to prevent race conditions \cite{burns_real-time_2009}. This adds complexity and thus makes the system less robust and maintainable. Another challenge is that shared memory must be allocated and managed by both processes. This makes it difficult to integrate across different programming languages where data structures may not be inherently compatible. Thus the complexity, lack of language compatibility and make it impractical for this application.
+
+\paragraph*{Named Pipes}
+Named Pipes allow data to be transmitted between processes on the same machine asynchronously by operating as a first-in, first-out (FIFO) buffer \cite{gray_interprocess_2003}. Compared to file-based communication, pipes offer lower latency and are more efficient for continuous data streaming \cite{gray_interprocess_2003}. The main limitation in the context of this project is that they are constrained to a single machine. This limits the scalability since in a later revision one might want to run the vision and control systems on separate machines in a distributed setup. 
+
+\paragraph*{Message queues}
+Message queues provide structured message passing using a queue-based architecture \cite{kleppmann_designing_2017}. Systems such as RabbitMQ and Apache Kafka provide reliable message delivery making message queues highly fault tolerant. However they also introduce latency due to message buffering and broker management \cite{kleppmann_designing_2017}. Meaning that they may not be ideal for real-time application such as this onw where low-latency streaming is of a higher priority than durable message queueing.
+
+\paragraph*{Networking (Sockets and ZeroMQ)}
+Networking-based communication, using either raw sockets or messaging libraries such as ZeroMQ \cite{noauthor_zeromq_nodate}, provides a flexible and scalable solution \cite{lauener_how_2018}. Raw sockets allow direct communication over a network using protocols such as TCP or UDP. TCP ensures reliable message delivery but introduces additional latency. The choice between TCP and UDP is a trade-off between reliability and variability of delays: UDP does not perform flow control and does not retransmit lost packets, so it avoids some of the resasons for variable network delays \cite{kleppmann_designing_2017}. Unlike TCP, UDP does not guarantee message delivery, meaning that packets may be lost.  However, for real-time control, receiving the most recent data is more important than ensuring that every packet arrives. Since the vision data is used as feedback, occasional packet loss is preferable to the latency caused by TCP retransmissions. 
+
+ZeroMQ provides a higher-level abstraction for message-based communication and offers built-in support for various messaging patterns, including publish/subscribe (pub/sub), request/reply and push/pull \cite{lauener_how_2018}. The pub/sub model is especially advantageous system since it enables efficient real-time streaming of data to multiple subscribers with minimal overhead. 
+
+
 %=================================================================
 %                           End Document
 %=================================================================

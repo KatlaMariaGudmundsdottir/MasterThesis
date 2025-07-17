@@ -1,31 +1,26 @@
 \setstretch{1.4}
-\sectiontitle{6}{Closed-Loop Tension Control}
+\sectiontitle{7}{Closed-Loop Tension Control}
 \lhead{Closed-Loop Tension Control} % section header
-As mentioned in the project context a form of closed-loop control of the tendon tensions was already implemented before the start of this thesis. However that implementation had several issues, including large steady state error up to 100mN, and difficulty in tracking the setpoints when while the linear stage was moving, thereby creating large over- and undershoots in tension. There were also issues in the implementations of the GUI leading the setpoint to be set to zero before being set to the desired setpoint decided by the user. Therefore it was necessary to rework this closed-loop tension control in order to ensure that later navigational control that would be implemented on top of this inner closed loop would function in the intended manner.
+A form of closed-loop control of the tendon tensions was already implemented before the start of this thesis. However that implementation had several issues, including large steady state errors, and difficulty in tracking the setpoints while the linear stage was moving, thereby creating large over- and undershoots in tension. Therefore it was necessary to rework this closed-loop tension control in order to ensure that later navigational control that would be implemented on top of this inner closed loop would function in the intended manner.
 
 \lhead{Closed-Loop Tension Control - Methods} % section header
 \subsection{Methods}
 
 \subsubsection{System Analysis and Initial PID Tuning}
-In order to rework the closed-loop tension control it was necessary to first figure out what was leading to the poor functionality. To investigate this a logger was implemented that logged and saved all relevant data. A script for analyzing and plotting the data was also written in python. 
-\newline \newline
-After analyzing the behavior, the simplest solution was tested first, namely retuning the PIDs, especially turning up the integral term. However returning in an attempt to remove the standard deviation led to instability, oscillations and large errors particularly when the ribbon was being moved up and down by the linear stage. Therefore the entire PID implementation had to be re-evaluated and re-worked. 
+To rework the closed-loop tension control, it was first necessary to identify the cause of its poor performance. To investigate this a logger was implemented that logged and saved all relevant data. A script for analyzing and plotting the data was also written in python. After analyzing the behavior, the simplest solution was tested first, namely retuning the PIDs. However re-tuning in an attempt to remove the standard deviation led to instability, oscillations and large errors particularly when the ribbon was being moved up and down by the linear stage. Therefore the entire PID implementation had to be re-evaluated and re-worked. 
 
 \subsubsection{Identifying Control Limitations due to Hardware}
-The observed instability and failure to reach tension setpoints was ultimately traced back to limitations due to utilizing a speed controller for the Faulhaber brushless motors used in the system. A speed controller is not well suited for tension control since it is designed to regulate the motor's rotational speed, not the force (torque) it applies to maintain tension. In tension control, the goal is to keep a consistent pulling force on the tendon, which depends directly on the motor's torque. However, a speed controller adjusts torque only as a means to achieve a target speed. Thus in this original implementation where a closed-loop PID tension control is implemented on top of a speed controller, the layered control structure causes significant issues. The outer tension control loop adjusts the target speed command based on the tension error, but it takes time for the inner speed controller to reach this set target, in the mean time the outerloop will continue to recalculate the speed setpoints. So if the outerloop sets a speed target that the inner loop can not reach before the outerloop calculates a new setpoint, there is in-effect a significant delay that leads to instability. 
-\newline \newline
-Because of these dynamics, an attempt was made to change the parameters of the speed controller by turning down the proportional term of the internal speed PID controller and setting the integral term to zero. The aim was to gain more direct control of the motor's behavior by reducing the internal controller's influence, allowing the outer tension loop to act more like a direct torque controller. However it turned out to be impossible to turn of the integral term, apparently the internal PID parameters, particularly the integral term, are auto-configured and to a degree locked by the Motion Manager software and not intended for external adjustment. Since it was impossible to turn of the integral term this led to undesired behavior, such as when the motor is given a constant setpoint it will begin by reeling in the string as intended, but then will slowly stop reeling in and eventually start turning the other way, releasing the string until it is manually stopped. 
+The observed instability and failure to reach tension setpoints was ultimately traced back to limitations due to utilizing a speed controller for the Faulhaber brushless motors used in the system. A speed controller is not well suited for tension control since it is designed to regulate the motor's rotational speed, not the force (torque) it applies to maintain tension. In tension control, the goal is to keep a consistent pulling force on the tendon, which depends directly on the motor's torque. However, a speed controller adjusts torque only as a means to achieve a target speed. Thus in this original implementation where a closed-loop PID tension control is implemented on top of a speed controller, the layered control structure causes significant issues. The outer tension control loop adjusts the target speed command based on the tension error, but it takes time for the inner speed controller to reach this set target, in the meantime, the outer loop continues to recalculate the speed setpoints. So if the outer-loop sets a speed target that the inner loop can not reach before the outer-loop calculates a new setpoint, there is in effect a significant delay that leads to instability. 
+
+Because of these dynamics, an attempt was made to change the parameters of the speed controller by turning down the proportional term of the internal speed PID controller and setting the integral term to zero. The aim was to gain more direct control of the motor's behavior by reducing the internal controller's influence, allowing the outer tension loop to act more like a direct torque controller. However it turned out to be impossible to turn of the integral term, due to locks in the Motion Manager software.
 
 \subsubsection{System Adaptation Strategy}
-Since the inner controller could not be reconfigured for torque control, the solution was to adapt the system to work within these constraints. This means making the inner loop, i.e. the motor's internal speed control, as fast and responsive as possible. In contrast, everything else around the motor has to be slowed down to avoid overwhelming the inner loop.
-\newline \newline
-This also requires making the brush less motors as responsive as possible, so to that end the deadzone for the motors was found and compensated for in the implementation of the controller. Additionally it was important to ensure that the sensor were as accurate as possible, thus they were recalibrated and tare-ing functionality was implemented.
+Since the inner controller could not be reconfigured for torque control, the system needed to be adapted to work within these constraints. This meant making the inner loop, i.e. the motor's internal speed control, as fast and responsive as possible. In contrast, everything else around the motor has to be slowed down to avoid overwhelming the inner loop.
+
+This also requires making the brushless motors as responsive as possible, so to that end the deadzone for the motors was found and compensated for in the implementation of the controller. Additionally it was important to ensure that the sensors were as accurate as possible, thus they were recalibrated and tare-ing functionality was implemented.
 
 \subsubsection{Integration of New Hardware}
-However before doing so the setup was due for another iteration. There were several issues with the initial implementation of the system including unreliable reeling in of the tendons, the backbone would also often slip leading to unreliable behavior. Therefore the mechanical setup redesigned by Lorenzo and the motor responsible for moving the backbone of the tendon up and down was replaced. It was therefore a necessary step to assemble the setup once the components arrived, redo the wiring and write a control class in C++ for the new linear stage and integrate it with the rest of the codebase. A comparison between the previous hardware iteration and the new hardware assembled during this thesis can be seen in figure \ref{fig:hardwarecompare}.
-\newline \newline
-The \texttt{LinearStageController} class was implemented by adapting C++ example code and API documentation provided by Physik Instrumente. Core functionality such as motion control, servo handling, and data recording was tailored to the system using these references. The code was modularized, integrated with Qt’s signal-slot system, and extended with safety checks and asynchronous timers to meet real-time control and estimation requirements.
-
+There were several issues with the initial implementation of the system including unreliable reeling in of the tendons, the backbone would also often slip leading to unreliable behavior. Therefore the mechanical setup was redesigned by Lorenzo and the motor responsible for moving the backbone of the tendon up and down was replaced. The setup was assembled, the wiring was re-done and a new control class for the new linear stage was written and integrated with the rest of the codebase. A comparison between the previous hardware iteration and the new hardware assembled during this thesis can be seen in figure \ref{fig:hardwarecompare}.
 \begin{figure}[H]
     \centering
     \begin{subcaptionbox}{Old Setup\label{fig:left}}[0.5\linewidth]
@@ -38,11 +33,11 @@ The \texttt{LinearStageController} class was implemented by adapting C++ example
     \caption{Comparison of the previous hardware iteration (a) and the new hardware (b) assembled during this thesis}
     \label{fig:hardwarecompare}
 \end{figure}
-
+The \texttt{LinearStageController} class was implemented by adapting C++ example code and API documentation provided by Physik Instrumente. Core functionality such as motion control, servo handling, and data recording was tailored to the system using these references. The code was modularized, integrated with Qt’s signal-slot system, and extended with safety checks and asynchronous timers to meet real-time control and estimation requirements.
 
 \subsection{Design}
 A figure depicting the overall design of closed loop tendon tension control can be seen in figure \ref{fig:tensioncontrol}.
-\begin{figure}
+\begin{figure} [H]
     \centering
     \includegraphics[width=0.7\linewidth]{images/tensioncontrol.png}
     \caption{Control diagram for the closed loop tension control.}
@@ -52,17 +47,15 @@ A figure depicting the overall design of closed loop tendon tension control can 
 
 \lhead{Closed-Loop Tension Control - Implementation} % section header
 \subsection{Implementation}
-The folowing section goes through the modules depicted in figure \ref{fig:tensioncontrol} one by one and explains their implementation in the control system.
+The following section goes through the modules depicted in figure \ref{fig:tensioncontrol} one by one and explains their implementation in the codebase.
 
 \subsubsection{Brushless Motor Speed Controller}
-Since the inner controller is a speed controller and could not be recongifured for torque control, the solution was to instead optimize the system around its limitations. This involved selecting the best parameters for the inner speed controller to ensure that it responds as quickly as possible. This turned out to be the values provided by Faulhaber as default values. 
+Since the inner controller is a speed controller and could not be reconfigured for torque control, the system was optimized around this limitation. This involved selecting the best parameters for the inner speed controller to ensure that it responds as quickly as possible.  
 
-\subsubsection{Linear Stage sSpeed Feedforward}
+\subsubsection{Linear Stage Speed Feedforward}
 Since the backbone of the ribbon is moved up and down by the linear stage and the tendons are attached at the distal most point of the ribbon, it makes sense to have a feedforward to the tendon tension control that ensures that the tension remains relatively stable during movement by reeling the appropriate amount in or out based on the speed of the linear stage. This also ensures that the feedback doesn't need to do all the heavy lifting of compensating for the movement.
 
 \paragraph*{Motivation for Implementing a New Linear Stage}
-Before moving on to implementing the feedforward element that depends on the speed of the linear stage, the new linear stage had to be implemented. In a previous iteration of the system, the one that was implemented when this thesis was started the setup utilized a servomotor along with with a "feeder" that consisted of two counterrotating barrels, essentially serving as a conveyor belt (figure \ref{fig:conveyor}). However there were significant issues with this mostly due to slipping, something that was exacerbated when the system was miniaturized. It was therefore replaced by a linear stage that is directly attached to the top of the ribbon, removing the slipping issue of the conveyor belt solution. A comparison of the two insertion strategies can be seen in figure \ref{fig:insertionStrategies}
-
 \begin{figure}[H]
     \centering
     \begin{subcaptionbox}{Old insertion strategy using a "conveyor belt" \label{fig:conveyor}}[0.45\linewidth]
@@ -76,20 +69,25 @@ Before moving on to implementing the feedforward element that depends on the spe
     \label{fig:insertionStrategies}
 \end{figure}
 
+Before moving on to implementing the linear stage feedforward element, the new linear stage had to be implemented. Previously the system utilized a servomotor along with with a "feeder" that consisted of two counterrotating barrels, essentially serving as a conveyor belt (figure \ref{fig:conveyor}). However there were significant issues with this mostly due to slipping, something that was exacerbated when the system was miniaturized. It was therefore replaced by a linear stage that is directly attached to the top of the ribbon, removing the slipping issue of the conveyor belt solution. A comparison of the two insertion strategies can be seen in figure \ref{fig:insertionStrategies}
 
 \paragraph*{Software Implementation of Linear Stage Control}
-Two new classes were written to integrate this linear stage into the system software: \texttt{LinearStageController} and \texttt{StageMotionEstimator}, seen in figure \ref{fig:linearsoftware}. The \texttt{LinearStageController} is responsible for low-level communication with the linear stage hardware using the Physik Instrumente (PI) GCS2 API. It handles connection management, servo enable/disable commands, movement to absolute or relative positions, referencing, and safety checks for position limits and servo state. Timers are used to periodically check whether movement or referencing operations are complete, allowing the controller to emit signals when movement finishes or when feedback estimation should start or stop.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{images/Software documentation/linearstage.png}
-    \caption{Module diagram showing how how the software implementation of the linearstage subsystem communicates with the rest of the control system}
+    \caption{Module diagram showing the software implementation of the linearstage subsystem communicates with the rest of the control system}
     \label{fig:linearsoftware}
 \end{figure}
-Methods were also written for querying the current state of the system, such as position, speed, and servo status, and the class integrates with Qt’s signal-slot mechanism to communicate with other parts of the application. All interaction with the hardware is guarded by connection and safety checks to prevent invalid operations, and the use of QTimers ensures that blocking calls are avoided, keeping the GUI responsive. This modular and robust design makes the class easy and safe to  reuse and extend in future control experiments involving the linear stage.
+Two new classes were written to integrate the linear stage into the system software: 
+\texttt{LinearStageController} and \texttt{StageMotionEstimator}, seen in figure \ref{fig:linearsoftware}. The \newline \texttt{LinearStageController} is responsible for low-level communication with the linear stage hardware using the Physik Instrumente (PI) GCS2 API. It handles connection management, servo enable/disable commands, movement to absolute or relative positions, referencing, and safety checks for position limits and servo state. Timers are used to periodically check whether movement or referencing operations are complete, allowing the controller to emit signals when movement finishes or when feedback estimation should start or stop.
+
+Methods were also written for querying the current state of the system, such as position, speed, and servo status, and the class integrates with Qt’s signal-slot mechanism to communicate with other parts of the application. All interaction with the hardware is guarded by connection and safety checks to prevent invalid operations.
 
 
 \paragraph*{Implementing a Motion Estimator for the Linear Stage}
-Although the GCS2 API for the linear stage offers some data transmission functionality, it lack the capability to continuously and reliably transmit real-time speed data at the necessary rate for feedforward control. Several lengthy attempts were made at using the PI data recorder system to fetch position readings (speed readings are not available through the recorder system). However it proved to have extremely limited buffer size leading it to either be too slow or limited in throughput for real-time control. Timer triggered querying was also attempted but since the API requires acknowledgments and the querying is slow was also not a feasible solution.
+Although the GCS2 API for the linear stage offers some data transmission functionality, it lacks the capability to continuously and reliably transmit real-time speed data at the necessary rate for feedforward control. Several attempts were made at using the PI data recorder system to fetch position readings (speed readings are not available through the recorder system). However it proved to have extremely limited buffer size leading it to either be too slow or limited in throughput for real-time control. Timer triggered querying was also attempted but since the API requires acknowledgments and the querying is slow, this also wasn't a feasible solution.
+
+The \texttt{StageMotionEstimator} class was therefore written to estimate the stage's speed and position. When a movement command is issued, this class is initialized with the start and target positions, as well as the target speed, acceleration and deceleration parameters. All parameters that are known and chosen by the user. It then calculates whether the motion will follow a trapezoidal or triangular speed profile and starts a \texttt{QTimer} to periodically compute the current estimated speed and position. This allows for the access of real-time speed estimates for the feedforward, even though the stage hardware itself is incapable of supplying this information. Figure A sequence diagram describing this process
 
 \begin{figure} [H]
     \centering
@@ -98,16 +96,12 @@ Although the GCS2 API for the linear stage offers some data transmission functio
     \label{fig:movetopos}
 \end{figure}
 
-The \texttt{StageMotionEstimator} class was therefore written to estimate the stage's speed and position. When a movement command is issued, this class is initialized with the start and target positions, as well as the target speed, acceleration and deceleration parameters. All parameters that are known and chosen by the user. It then calculates whether the motion will follow a trapezoidal or triangular speed profile and starts a \texttt{QTimer} to periodically compute the current estimated speed and position. This allows for the access of real-time speed estimates for the feedforward, even though the stage hardware itself is incapable of supplying this information. Figure A sequence diagram describing this process
-
 
 \paragraph*{Linear stage speed ramping}
 Because of the limitations of using a speed controller the dynamics of the system had to be slowed down, as mentioned earlier. The motion profile of the linear stage was therefore adjusted to have slower acceleration and deceleration than its default values. This is done since the speed of the linear stage is used as a feedforward for tension control, so ensuring that there are no quick jumps in linear stage speed will also ensure that there are not large jumps in motor setpoint speed thereby ensuring that the inner speed loop has time to reach its setpoints.
 
 \subsubsection{Tendon tension feedback controller}
-The main component of the tension control system is the closed-loop feedback controller, which was re-implemented to address the issues identified in the earlier setup. The controller operates based on real-time force measurements obtained from the four tendon force sensors. The goal is to minimize the error between the measured tendon tension and the desired setpoint, which can either be statically set or dynamically adjusted based on control objectives. 
-\newline \newline
-Each tendon has its own instance of the controller, which calculates the motor velocity required to minimize the error between the measured tendon tension and the desired setpoint. Each controller runs at a fixed interval of \SI{5}{\milli \second}, synchronized across al four tendons. 
+The main component of the tension control system is the closed-loop feedback controller, which was re-implemented to address the issues identified in the earlier setup. The controller operates based on real-time force measurements obtained from the four tendon force sensors. Each tendon has its own instance of the controller, which calculates the motor velocity required to minimize the error between the measured tendon tension and the desired setpoint. Each controller runs at a fixed interval of \SI{5}{\milli \second}, synchronized across all four tendons. 
 
 \paragraph*{Sensor calibration}
 Before reliable tension control could be implemented, the tendon force sensors had to be calibrated. Initially, there were large discrepancies in the sensors outputs, where some sensors were measuring tension values that were up to five times too low compared to actual values. These errors were traced to misconfigured and miscalibrated sensors. To address this the sensor settings were changed. Specifically all settings were manually set to default values, except for resolution which was set to high-resulotion mode with  \SI{0.5}{\milli\volt\per\volt}, and the sampling frequency which was increased to \SI{1}{\kilo\hertz}. Since the PI controller runs at a fixed interval of \SI{5}{\milli\second}, it ensures that the sensor sampling rate is several times faster than the control loop update rate. After this the setting of the sensors was calibrated by using calibration weights to validate the force sensor read outs.
@@ -116,21 +110,21 @@ Additionally, a new tare function was implemented in the refactored \texttt{sens
 
 \paragraph*{Motor deadzone}
 During testing it was observed that the brushless motors had a certain deadzone, where a range of input voltages produced no movement of the motor due to internal friction, electrical thresholds or controller nonlinearity. In the tension control system which requires fine corrections, this undressed deadzone behavior caused delays and thereby oscillations and instability.
-\newline \newline 
+
 To quantify the deadzone, a motor was given a static voltage commands, incrementally increasing in both directions. It was observed that motion only began at around \SI{1.5}{\volt}, regardless of direction. As a result, small actuation outputs below this threshold had no effect.
-\newline \newline
+
 To address this, a fixed \SI{1.5}{\volt} offset was added to all non-zero control signals, ensuring that outputs always exceeded the activation threshold. This improved responsiveness and significantly reduced oscillations and steady-state error, particularly during fine tension corrections or stage movement.
 
 \paragraph*{PI controller}
-The main component of the feedback controller is the PI controller. A PI controller was chosen for this application because of the system dynamics. The interaction between the tendon and surrounding gelatin result in a relatively slow and heavily damped system, making derivative control largely unnecessary and potentially counterproductive, as it tends to amplify noise. Proportional and integral terms were therefore deemed sufficient. 
-\newline \newline
-The proportional gain provides immediate correction in response to tension deviations, while the integral term accumulates error over time to eliminate steady-state offset. However to prevent accumulation of too much error anti-windup was implemented. The integral term is also reset under specific conditions: when the setpoint changes, or when the linear stage starts or stops moving. These event introduce abrupt shifts in the system, making previous integral contributions invalid. By resetting the integral in these cases, the controller avoids reacting to outdated errors and ensures smoother, more accurate tension regulation. 
+The main component of the feedback controller is the PI controller. A PI controller was chosen for this application because of the system dynamics. The interaction between the tendon and surrounding gelatin result in a relatively slow and heavily damped system, making derivative control largely unnecessary and potentially counterproductive, as it tends to amplify noise.
+
+The proportional gain provides immediate correction in response to tension deviations, while the integral term accumulates error over time to eliminate steady-state offset. However to prevent accumulation of too much error anti-windup was implemented. The integral term is also reset under specific conditions: when the setpoint changes, or when the linear stage starts or stops moving. These events introduce abrupt shifts in the system, making previous integral contributions invalid. By resetting the integral in these cases, the controller avoids reacting to outdated errors and ensures smoother, more accurate tension regulation. 
 
 \paragraph*{Pull and release gains}
 Since the mechanical dynamics of the system are dependent on whether you are increasing tension (pulling) or decreasing tension (releasing), each PI controller was implemented with two separate sets of gains. One for pulling and one for releasing. When pulling the motor must overcome the resistance from the ribbon pushing against the gelatin, in contrast, when releasing the gelatin pushes the ribbon back, assisted by internal tension, leading to faster and less resistive motion. Intuitively the gains for the release must therefore be lower than those for pulling and by separating the gain parameters each control direction could be tuned to better match these asymmetric dynamics.
 
 \paragraph*{Tendon tension setpoint ramping}
-To prevent instability in the outer tension control loop, changes to the tension setpoint are not applied instantaneously. Instead, when a new setpoint is requested, the system gradually ramps from the current setpoint to the desired on at a controlled rate, defined by the parameter \texttt{setpointRampingSpeed}. This ramping ensures that the inner speed control loop has enough time to respond to changes smoothly.
+To prevent instability in the outer tension control loop, changes to the tension setpoint are not applied instantaneously. Instead, when a new setpoint is requested, the system gradually ramps from the current setpoint to the desired one at a controlled rate, defined by the parameter \texttt{setpointRampingSpeed}. This ramping ensures that the inner speed control loop has enough time to respond to changes smoothly.
 
 
 \subsection{Results}
@@ -143,7 +137,7 @@ Figure \ref{fig:rampresponse} shows example responses from the closed-loop tensi
     \label{fig:rampresponse}
 \end{figure}
 
-Figure \ref{fig:PIDErrorDistByTendon} presents the distribution of steady-state tracking errors across all four tendons during insertion trials where the setpoint was held constant and above 100mN. Each boc box plot summarizes the percent error relative to the setpoint, highlighting both median error and variability. The overall performance of the tension controllers was highly accurat wiht a mean error across all tests of just -0.018\%. There is however significant difference in the performance of each tendon, likely due to mechanical differences such as different internal resistances inside the ribbon.
+Figure \ref{fig:PIDErrorDistByTendon} presents the distribution of steady-state tracking errors across all four tendons during insertion trials where the setpoint was held constant and above 100mN. Each box plot summarizes the percent error relative to the setpoint, highlighting both median error and variability. The overall performance of the tension controllers was highly accurate with a mean error across all tests of just -0.018\%. There is however significant difference in the performance of each tendon, likely due to mechanical differences such as different internal resistances inside the ribbon.
 
 \begin{figure} [H]
     \centering
@@ -163,7 +157,6 @@ Similarly figure \ref{fig:steadtyStatePIDError} shows the mean steady-state erro
     \label{fig:steadtyStatePIDError}
 \end{figure}
 
-Finally figure \ref{fig:overshoot} shows the maximum tension overshoot observed for each tendon during setpoint ramping and insertion across a range of target setpoints. The mean maximum overshoot across all tendons and tests was approximately 50mN. 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\linewidth]{images/PID performance/rampingOvershoot.png}
@@ -171,10 +164,13 @@ Finally figure \ref{fig:overshoot} shows the maximum tension overshoot observed 
     \label{fig:overshoot}
 \end{figure}
 
+Finally figure \ref{fig:overshoot} shows the maximum tension overshoot observed for each tendon during setpoint ramping and insertion across a range of target setpoints. The mean maximum overshoot across all tendons and tests was approximately 50mN. 
+
+
 \subsection{Discussion}
 The improved closed-loop tension control system demonstrates robust tracking performance, both during steady-state and while ramping. The use of tension setpoint ramping, with careful tuning of the PI controllers and system specific compensations, such as motor deadzone correction and linearstage speed feedforward, all prove effective in stabilizing the system and mitigating the instability issues observed previously.
 \newline \newline
-Results from ramping tests show that tht econtroller can track desired tension values motthly without oscillation and with acceptable overshoots. Also during steady-state conditions, the mean error remains very low. Importantly, there is no clear trend of increasing overshoot with higher sepoints. This indicates that the controller design and ramping strategy successfully decouple overshoot behavior from the magnitude of setpoint changes.
+Results from ramping tests show that the controller can track desired tension values smoothly without oscillation and with acceptable overshoots. Also during steady-state conditions, the mean error remains very low. Importantly, there is no clear trend of increasing overshoot with higher setpoints. This indicates that the controller design and ramping strategy successfully decouple overshoot behavior from the magnitude of setpoint changes.
 \newline \newline 
 The maximum overshoot results also warrant discussion, since a deliberate tradeoff was made to prioritize rapid system response. This rapid response is particularly important when the linear stage begins moving, then a quick reaction is essential to maintain safe and stable tendon tension. Taking this into account a moderate, short term overshoot was considered a reasonable compromise.
 
